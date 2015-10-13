@@ -1,0 +1,10 @@
+﻿<Window x:Class="eDoctrinaOcrTestWPF.ConfirmWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Height="150" Width="300" ResizeMode="NoResize" WindowStartupLocation="CenterOwner" Icon="ico.ico">
+    <Grid Margin="10">
+        <Label Content="Enter your name" VerticalAlignment="Top" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+        <TextBox x:Name="NameTextBox" TextWrapping="Wrap" VerticalAlignment="Center" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" MaxLines="2"/>
+        <Button x:Name="OkButton" Content="Ok" VerticalAlignment="Bottom" Click="OkButton_Click"/>
+
+    </Grid>
+</Window>

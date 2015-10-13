@@ -1,0 +1,143 @@
+﻿<Window x:Name="window" x:Class="eDoctrinaOcrWPF.MainWindow"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        Title="eDoctrina OCR Service" Height="600" Width="836" Icon="ico.ico" 
+        Closing="Window_Closing" Initialized="Window_Initialized" Loaded="Window_Loaded" Background="#FFF1EDED">
+    <Window.Resources>
+        <DataTemplate x:Key="ButtonWithFolderIconTemplate">
+            <StackPanel Orientation="Horizontal">
+                <Image x:Name="playImage" Source="Resources/folder1616.png" Width="16" RenderOptions.BitmapScalingMode="HighQuality"/>
+                <ContentPresenter VerticalAlignment="Center" Content="{Binding }"/>
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate x:Key="ButtonWithLogIconTemplate">
+            <StackPanel Orientation="Horizontal">
+                <Image x:Name="playImage" Source="Resources/log1616.png" Width="16" RenderOptions.BitmapScalingMode="HighQuality"/>
+                <ContentPresenter VerticalAlignment="Center" Content="{Binding }"/>
+            </StackPanel>
+        </DataTemplate>
+        <DataTemplate x:Key="ButtonWithCloseIconTemplate">
+            <Image x:Name="playImage" Source="Resources/close1616.png" Width="16" RenderOptions.BitmapScalingMode="HighQuality"/>
+        </DataTemplate>
+        <Style x:Key="ButtonStyle1" TargetType="{x:Type Button}">
+            <Setter Property="FocusVisualStyle">
+                <Setter.Value>
+                    <Style>
+                        <Setter Property="Control.Template">
+                            <Setter.Value>
+                                <ControlTemplate>
+                                    <Rectangle Margin="2" SnapsToDevicePixels="True" Stroke="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" StrokeThickness="1" StrokeDashArray="1 2"/>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Width" Value="100"/>
+            <Setter Property="Background" Value="#4CDDDDDD"/>
+            <Setter Property="BorderBrush" Value="#FF707070"/>
+            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border x:Name="border" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
+                            <ContentPresenter x:Name="contentPresenter" ContentTemplate="{TemplateBinding ContentTemplate}" Content="{TemplateBinding Content}" ContentStringFormat="{TemplateBinding ContentStringFormat}" Focusable="False" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}" RecognizesAccessKey="True" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsDefaulted" Value="True">
+                                <Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" TargetName="border" Value="#FFBEE6FD"/>
+                                <Setter Property="BorderBrush" TargetName="border" Value="#FF3C7FB1"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" TargetName="border" Value="#FFC4E5F6"/>
+                                <Setter Property="BorderBrush" TargetName="border" Value="#FF2C628B"/>
+                            </Trigger>
+                            <Trigger Property="ToggleButton.IsChecked" Value="True">
+                                <Setter Property="Background" TargetName="border" Value="#FFBCDDEE"/>
+                                <Setter Property="BorderBrush" TargetName="border" Value="#FF245A83"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Background" TargetName="border" Value="#FFF4F4F4"/>
+                                <Setter Property="BorderBrush" TargetName="border" Value="#FFADB2B5"/>
+                                <Setter Property="TextElement.Foreground" TargetName="contentPresenter" Value="#FF838383"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid Margin="10" >
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Margin="0" Orientation="Horizontal" HorizontalAlignment="Left">
+                <Button x:Name="FolderTestsButton" Content="Input queue" Margin="0,0,5,0" Click="FolderTestsButton_Click" 
+                        ContentTemplate="{StaticResource ButtonWithFolderIconTemplate}" Style="{DynamicResource ButtonStyle1}" Width="88"/>
+                <Button x:Name="FolderSuccessResultsButton" Content="Success folder" Margin="5,0" Grid.Column="1" Click="FolderSuccessResultsButton_Click"
+                        ContentTemplate="{StaticResource ButtonWithFolderIconTemplate}" Style="{DynamicResource ButtonStyle1}"/>
+                <Button x:Name="FolderErrorsResultsButton" Content="Errors folder" Margin="5,0" Grid.Column="1" Click="FolderErrorsResultsButton_Click"
+                        ContentTemplate="{StaticResource ButtonWithFolderIconTemplate}" Style="{DynamicResource ButtonStyle1}" Width="92"/>
+                <Button x:Name="FolderArchiveButton" Content="Input queue archive" Margin="5,0" Grid.Column="2" Click="FolderArchiveButton_Click"    
+                        ContentTemplate="{StaticResource ButtonWithFolderIconTemplate}" Style="{DynamicResource ButtonStyle1}" Width="130"/>
+                <Button x:Name="LogButton" Content="Log" Margin="5,0,0,0" Grid.Column="3" Click="LogButton_Click"
+                        ContentTemplate="{StaticResource ButtonWithLogIconTemplate}" Style="{DynamicResource ButtonStyle1}" Width="49"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Column="1">
+                <Button x:Name="StartButton" Content="Start" Margin="5,0" Grid.Column="5" Click="StartButton_Click"
+                         Style="{DynamicResource ButtonStyle1}" HorizontalContentAlignment="Center" Width="62"/>
+                <Button Content="Stop" HorizontalContentAlignment="Center" Name="PauseButton" Style="{DynamicResource ButtonStyle1}" Click="PauseButton_Click" Width="61" />
+                <Button x:Name="StopButton" Content="Pause" Margin="5,0" Grid.Column="6" Click="StopButton_Click"
+                         Style="{DynamicResource ButtonStyle1}" HorizontalContentAlignment="Center" Width="61"/>
+                <!--<eDoctrinaUtilsWPF:NumericUpDown x:Name="nudThreadsCount" Maximum="50" ToolTip="The maximum number of threads" ValueChanged="nudThreadsCount_ValueChanged" Margin="5,0,0,0" Width="32"/>-->
+            </StackPanel>
+        </Grid>
+        <Grid Margin="10,0" Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="635*" />
+            </Grid.ColumnDefinitions>
+            <Label x:Name="labelFile" Content="Last processed file:" />
+            <Label x:Name="labelTime" Content="Last file process time:" Grid.Row="1"/>
+            <Label x:Name="labelQueue" Content="Files in queue:" Grid.Row="2" Width="123" HorizontalAlignment="Left" />
+            <Label x:Name="LabelFramesQueue" Content="Pages in queue:" Grid.Row="3"/>
+            <Label x:Name="labelFilesInWork" Content="Pages in work:" Grid.Row="4"/>
+            <Label x:Name="lblFile" Content="" Grid.Column="1" Grid.ColumnSpan="2"/>
+            <Label x:Name="lblTime" Content="" Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2"/>
+            <Label x:Name="lblQueue" Content="0" Grid.Column="1" Grid.Row="2"/>
+            <Label x:Name="lblFramesQueue" Content="0" Grid.Column="1" Grid.Row="3"/>
+            <Label x:Name="lblFilesInWork" Content="0" Grid.Column="1" Grid.Row="4"/>
+            <TextBox x:Name="TextLog" Grid.Column="2" TextWrapping="Wrap" Grid.RowSpan="6" ScrollViewer.CanContentScroll="True" Background="{Binding Background, ElementName=window}" VerticalScrollBarVisibility="Auto"/>
+            <Button x:Name="LogCloseButton" Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Top" Click="LogCloseButton_Click" Width="20" Height="20"
+                ContentTemplate="{StaticResource ButtonWithCloseIconTemplate}" Background="{x:Null}" Margin="0,0,20,0" />
+        </Grid>
+        <StatusBar x:Name="statusStrip1" Grid.Row="2" Background="{x:Null}" BorderBrush="#FFABADB3" BorderThickness="0,1,0,0" >
+            <TextBlock x:Name="StatusTextBlock" />
+        </StatusBar>
+    </Grid>
+</Window>
