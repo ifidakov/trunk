@@ -172,6 +172,7 @@
     <Compile Include="AppSettings.cs" />
     <Compile Include="Batches\OcrAppConfigDefaults.cs" />
     <Compile Include="Batches\OcrAppConfigFolders.cs" />
+    <Compile Include="Batches\Updates.cs" />
     <Compile Include="ErrorRestart.cs" />
     <Compile Include="IOHelper.cs" />
     <Compile Include="FileProcessing\ProcessingIncomingFile.cs" />

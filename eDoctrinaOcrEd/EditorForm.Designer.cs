@@ -116,6 +116,7 @@
             this.lblErr = new System.Windows.Forms.Label();
             this.cbDoNotProcess = new System.Windows.Forms.CheckBox();
             this.toolTip2 = new System.Windows.Forms.ToolTip(this.components);
+            this.checkForUpdatesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.timer2 = new System.Windows.Forms.Timer(this.components);
             this.rbtnClear = new System.Windows.Forms.RadioButton();
             this.MainMenu.SuspendLayout();
@@ -161,6 +162,7 @@
             // fileMainMenuItem
             // 
             this.fileMainMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.checkForUpdatesToolStripMenuItem,
             this.openFileMainMenuItem,
             this.openManualInputFolderMainMenuItem,
             this.openProcessingFolderMainMenuItem,
@@ -177,8 +179,9 @@
             this.SendAllToNextProcessingToolStripMenuItem,
             this.toolStripSeparator2,
             this.returnFilesAndQuitToolStripMenuItem,
-            this.exitMainMenuItem,
-            this.restartToolStripMenuItem});
+            this.restartToolStripMenuItem,
+            this.exitMainMenuItem
+            });
             this.fileMainMenuItem.Name = "fileMainMenuItem";
             this.fileMainMenuItem.Size = new System.Drawing.Size(53, 28);
             this.fileMainMenuItem.Text = "File";
@@ -1202,6 +1205,13 @@
             this.restartToolStripMenuItem.Text = "Restart";
             this.restartToolStripMenuItem.Click += new System.EventHandler(this.restartToolStripMenuItem_Click);
             // 
+            // checkForUpdatesToolStripMenuItem
+            // 
+            this.checkForUpdatesToolStripMenuItem.Name = "checkForUpdatesToolStripMenuItem";
+            this.checkForUpdatesToolStripMenuItem.Size = new System.Drawing.Size(385, 28);
+            this.checkForUpdatesToolStripMenuItem.Text = "Check for updates";
+            this.checkForUpdatesToolStripMenuItem.Click += new System.EventHandler(this.checkForUpdatesToolStripMenuItem_Click);
+            // 
             // EditorForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1347,7 +1357,8 @@
         private System.Windows.Forms.Button btnSetAside;
         private System.Windows.Forms.Button btnDeferred;
         private System.Windows.Forms.NumericUpDown nudZoom;
-        private SplitButton splitBtnRestore;
+        private eDoctrinaOcrEd.SplitButton splitBtnRestore;
         public System.Windows.Forms.RadioButton rbtnClear;
+        private System.Windows.Forms.ToolStripMenuItem checkForUpdatesToolStripMenuItem;
     }
 }

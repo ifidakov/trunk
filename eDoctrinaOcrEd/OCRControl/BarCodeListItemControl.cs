@@ -138,6 +138,11 @@ namespace eDoctrinaOcrEd
                 EditorForm ef = (EditorForm)this.FindForm();
                 if (ef == null)
                     return;
+                if (this.Name == "BoxSheet")
+                {
+                    if (SelectedIndex != -1)
+                        EditorForm.ShetIdManualySet = true;
+                }
                 if (ef.Status != StatusMessage.Verify)
                     return;
                 if (ef.linsForm != null && (ef.linsForm.Visible))
@@ -226,6 +231,7 @@ namespace eDoctrinaOcrEd
             ef.rbtnRotate.Checked = false;
             ef.rbtnBubbles.Checked = false;
             ef.rbtnCut.Checked = false;
+            ef.rbtnClear.Checked = false;
             if (ef.linsForm != null)
                 ef.linsForm.Hide();
             else
@@ -247,7 +253,24 @@ namespace eDoctrinaOcrEd
             catch (Exception)
             {
             }
+
         }
+        int selIndex = -1;
+        private void comboBox1_DropDown(object sender, EventArgs e)
+        {
+            selIndex = -1;// comboBox1.SelectedIndex;
+        }
+
+        private void comboBox1_DropDownClosed(object sender, EventArgs e)
+        {
+            if (selIndex != comboBox1.SelectedIndex)
+                EditorForm.ShetIdManualySet = true;
+        }
+        private void comboBox1_ControlAdded(object sender, ControlEventArgs e)
+        {
+
+        }
+
         //-------------------------------------------------------------------------
     }
 }

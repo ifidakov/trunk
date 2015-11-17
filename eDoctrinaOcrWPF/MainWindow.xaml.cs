@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Net;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 //using RegEx = System.Text.RegularExpressions;
@@ -36,21 +38,30 @@ namespace eDoctrinaOcrWPF
         //-------------------------------------------------------------------------
         private void LoadSettings()
         {
-            defaults = new OcrAppConfig();
-            var appSettings = new OcrWPFSettings();
-            appSettings.Load();
-            if (!appSettings.SettingsExists)
+            try
+            {
+                defaults = new OcrAppConfig();
+                var appSettings = new OcrWPFSettings();
+                appSettings.Load();
+                if (!appSettings.SettingsExists)
+                {
+                    SaveSettings();
+                }
+                else
+                {
+                    this.WindowState = appSettings.Fields.WindowState;
+                    this.Left = appSettings.Fields.WindowLeft;
+                    this.Top = appSettings.Fields.WindowTop;
+                    if (appSettings.Fields.WindowWidth > 0)
+                        this.Width = appSettings.Fields.WindowWidth;
+                    if (appSettings.Fields.WindowHeight > 0)
+                        this.Height = appSettings.Fields.WindowHeight;
+                    this.nudThreadsCount.Value = appSettings.Fields.ThreadsCount;
+                }
+            }
+            catch (Exception)
             {
                 SaveSettings();
-            }
-            else
-            {
-                this.WindowState = appSettings.Fields.WindowState;
-                this.Left = appSettings.Fields.WindowLeft;
-                this.Top = appSettings.Fields.WindowTop;
-                this.Width = appSettings.Fields.WindowWidth;
-                this.Height = appSettings.Fields.WindowHeight;
-                this.nudThreadsCount.Value = appSettings.Fields.ThreadsCount;
             }
         }
         //-------------------------------------------------------------------------
@@ -58,8 +69,14 @@ namespace eDoctrinaOcrWPF
         {
             var appSettings = new OcrWPFSettings();
             appSettings.Fields.WindowState = this.WindowState;
-            appSettings.Fields.WindowLeft = this.Left;
-            appSettings.Fields.WindowTop = this.Top;
+            if (double.IsNaN(Left))
+                appSettings.Fields.WindowLeft = 0;
+            else
+                appSettings.Fields.WindowLeft = this.Left;
+            if (double.IsNaN(Top))
+                appSettings.Fields.WindowTop = 0;
+            else
+                appSettings.Fields.WindowTop = this.Top;
             appSettings.Fields.WindowWidth = this.Width;
             appSettings.Fields.WindowHeight = this.Height;
             appSettings.Fields.ThreadsCount = this.nudThreadsCount.Value;
@@ -128,7 +145,13 @@ namespace eDoctrinaOcrWPF
                     TextLog.Text = TextLog.Text.Insert(0, value.ToString() + "\r\n");
                     break;
                 case "Exception":
-                    MessageBox.Show(value.ToString(), Title, MessageBoxButton.OK, MessageBoxImage.Stop);
+                    //Dispatcher.BeginInvoke(new Action(delegate
+                    //{
+                    labelMessages.Content = value;
+                    labelMessages.Visibility = Visibility.Visible;
+                    //}));
+
+                    //MessageBox.Show(value.ToString(), Title, MessageBoxButton.OK, MessageBoxImage.Stop);
                     break;
                 case "Message":
                     MessageBox.Show(value.ToString(), Title, MessageBoxButton.OK, MessageBoxImage.Information);
@@ -176,6 +199,20 @@ namespace eDoctrinaOcrWPF
                 UpdateUI("ExceptionClose", defaults.exception.Message);
                 return;
             }
+            if (string.IsNullOrEmpty(defaults.UpdateServerName))
+            {
+                Dispatcher.BeginInvoke(new Action(delegate
+                {
+                    MessageBox.Show("Not set update server", Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+                    btnUpdate.IsEnabled = false;
+                }));
+            }
+            else
+                Dispatcher.BeginInvoke(new Action(delegate
+                {
+                    btnUpdate.IsEnabled = true;
+                }));
+
             if (defaults.DualControl)
             {
                 defaults.NotConfidentFolder = defaults.ErrorFolder;
@@ -217,6 +254,7 @@ namespace eDoctrinaOcrWPF
         //-------------------------------------------------------------------------
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            labelMessages.Visibility = Visibility.Hidden;
             string[] appDirArr = System.Text.RegularExpressions.Regex.Split(Environment.CurrentDirectory, "\\W+");
             if (appDirArr.Length > 0)
             {
@@ -666,6 +704,11 @@ namespace eDoctrinaOcrWPF
             {
                 if (dir == OcrAppConfig.TempFolder || dir == OcrAppConfig.TempFramesFolder)
                     return true;
+                Dispatcher.BeginInvoke(new Action(delegate
+                {
+                    labelMessages.Visibility = Visibility.Hidden;
+                }));
+
                 switch (key)
                 {
                     case "StartEditor":
@@ -747,6 +790,90 @@ namespace eDoctrinaOcrWPF
             isPause = true;
         }
         //-------------------------------------------------------------------------
+        private void btnUpdate_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                SaveSettings();
+                //StopButton.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+                Process.Start("eDoctrinaOcrUpdate.exe");
+
+                //WebClient client = new WebClient();
+                //string reply = "";
+                //if (defaults.UpdateServerName.StartsWith("http"))
+                //{
+                //    reply = client.DownloadString(Path.Combine(defaults.UpdateServerName, "edoc_ocr_update", "updateInfo.txt"));
+                //}
+                //else
+                //{
+                //    reply = File.ReadAllText(Path.Combine(defaults.UpdateServerName, "updateInfo.txt"));
+                //}
+                //string[] papams = Regex.Split(reply, "\\s+");
+                //if (papams.Length == 0)
+                //{
+                //    MessageBox.Show("Update error", Title, MessageBoxButton.OK, MessageBoxImage.Stop);
+                //    return;
+                //}
+                ////if (version.Revision.ToString() == papams[0])
+                //if (version.ToString() == papams[0])
+                //{
+                //    MessageBox.Show("You are using the latest version of the application."
+                //        , Title, MessageBoxButton.OK, MessageBoxImage.Information);
+                //    return;
+                //}
+                //if (MessageBox.Show(//"Updates found. Install them?"
+                //            "Version "+ version.ToString()+ " found. Install them?"
+                //            , Title, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
+                //{
+                //    return;
+                //}
+                //StopButton.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+                //if (VerifyDirectory("Updates"))
+                //{
+                //    try
+                //    {
+                //        DirectoryInfo dirInfo = new DirectoryInfo("Updates");
+                //        foreach (FileInfo file in dirInfo.GetFiles())
+                //        {
+                //            file.Delete();
+                //        }
+                //    }
+                //    catch (Exception ex)
+                //    {
+                //        MessageBox.Show(ex.Message, Title, MessageBoxButton.OK, MessageBoxImage.Stop);
+                //        StartButton.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent)); ;// Start();
+                //        return;
+                //    }
+                //}
+                //for (int i = 1; i < papams.Length; i++)
+                //{
+                //    try
+                //    {
+                //        UpdateUI("toolStripStatusLabel1", "Loading " + papams[i]);
+                //        string dest = Path.Combine("Updates", papams[i]);
+                //        if (defaults.UpdateServerName.StartsWith("http"))
+                //        {
+                //            string source = Path.Combine(defaults.UpdateServerName, "edoc_ocr_update", papams[i]);
+                //            Uri uri = new Uri(source);
+                //            client.DownloadFile(uri, dest);
+                //        }
+                //        else
+                //            File.Copy(Path.Combine(defaults.UpdateServerName, papams[i]), dest);
+                //}
+                //        catch (Exception ex)
+                //        {
+                //            MessageBox.Show(ex.Message, Title, MessageBoxButton.OK, MessageBoxImage.Stop);
+                //            StartButton.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+                //            return;
+                //        }
+                //    }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, Title, MessageBoxButton.OK, MessageBoxImage.Stop);
+                StartButton.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+            }
+        }
         //-------------------------------------------------------------------------
         //-------------------------------------------------------------------------
         //-------------------------------------------------------------------------

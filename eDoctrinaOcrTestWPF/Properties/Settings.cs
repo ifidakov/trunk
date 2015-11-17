@@ -29,7 +29,13 @@ namespace eDoctrinaOcrTestWPF
             {
                 XmlSerializer ser = new XmlSerializer(fields.GetType());
                 TextReader reader = new StreamReader(XMLFileName);
-                fields = ser.Deserialize(reader);
+                try
+                {
+                    fields = ser.Deserialize(reader);
+                }
+                catch (System.Exception)
+                {
+                }
                 reader.Close();
             }
             return fields;

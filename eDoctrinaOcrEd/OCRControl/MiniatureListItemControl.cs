@@ -1,6 +1,8 @@
 ﻿using eDoctrinaUtils;
 using System;
 using System.Drawing;
+using System.Linq;
+using System.Windows.Forms;
 
 namespace eDoctrinaOcrEd
 {
@@ -38,15 +40,47 @@ namespace eDoctrinaOcrEd
             }
         }
 
-        private void MiniatureListItemControl_Select(object sender, System.EventArgs e)
+        public void MiniatureListItemControl_Select(object sender, System.EventArgs e)
         {
             NotifyUpdated("SelectItem", this, e);
-            if (IsSelected)
+            //Control itm = (Control)sender;
+            //MiniatureListItemControl miniatureListItemControl = (MiniatureListItemControl)itm.Parent;
+            //var parent = Parent.Controls;
+            for (int i = 0; i < Parent.Controls.Count; i++)
             {
-                color = this.BackColor;
-                this.BackColor = SystemColors.ActiveCaption;
+                MiniatureListItemControl item = (MiniatureListItemControl)Parent.Controls[i];
+                if (item.Name == Name)
+                {
+                    IsSelected = true;
+                    this.BackColor = SystemColors.ActiveCaption;
+                    EditorForm ef = (EditorForm)FindForm();
+                    if (ef != null)
+                    {
+                        try
+                        {
+                            EditorForm.ShetIdManualySet = true;
+                            ef.BoxSheet.SelectedIndex = i;
+                            var selectedItem = ef.MiniatureItems.First(x => x.Name == EditorForm.rec.SheetIdentifier);
+                            ef.BoxSheet.SelectedItem = selectedItem;
+                            EditorForm.rec.SheetIdentifier = Name;
+                        }
+                        catch (Exception)
+                        {
+                        }
+                    }
+                }
+                else
+                {
+                    item.IsSelected = false;
+                    item.BackColor = SystemColors.Control;
+                }
+                //if (IsSelected)
+                //{
+                //    color = this.BackColor;
+                //    this.BackColor = SystemColors.ActiveCaption;
+                //}
+                //else this.BackColor =  color;
             }
-            else this.BackColor = color;
         }
 
         private Color color = SystemColors.Control;

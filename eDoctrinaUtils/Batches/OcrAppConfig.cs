@@ -21,6 +21,7 @@ namespace eDoctrinaUtils
         public double PercentConfidentText = PercentConfidentTextDefault;
         public string FontName = FontNameDefault;
         public string ServerName = ServerNameDefault;
+        public string UpdateServerName = UpdateServerNameDefault;
         public string OutputMode = "";
         public bool SmartResize = SmartResizeDefault;
         public bool DoNotProcess = DoNotProcessDefault;
@@ -100,6 +101,10 @@ namespace eDoctrinaUtils
                     ServerName = item.serverName;
                 else
                     ServerName = Environment.MachineName;
+
+                if (!string.IsNullOrEmpty(item.updateServerName))
+                    UpdateServerName = item.updateServerName;
+
                 if (!string.IsNullOrEmpty(item.outputMode))
                     OutputMode = item.outputMode;
 

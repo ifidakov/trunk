@@ -894,10 +894,10 @@ namespace eDoctrinaUtils
                     {
                         if (markerRT != new Rectangle() && markerRB != new Rectangle())
                         {
-                            if (Math.Abs(markerRT.X - markerRB.X) > markerRB.Width + markerRB.Width / 4)
+                            if (Math.Abs(markerRT.X - markerRB.X) > markerRB.Width + markerRB.Width / 2)
                                 continue;
                             if (markerLTet != new Rectangle() && IsSquare(markerLTet))
-                                if (Math.Abs(markerRT.X - markerRB.X) > markerRB.Width / 4)
+                                if (Math.Abs(markerRT.X - markerRB.X) > markerRB.Width / 2)
                                     continue;
                             if (Math.Abs(markerRT.Right - markerRB.Right) > markerRB.Width)
                                 continue;
@@ -909,6 +909,12 @@ namespace eDoctrinaUtils
                             if (Math.Abs(markerLT.X - markerLB.X) > markerLB.Width)
                                 continue;
                         }
+                        if (markerLT != new Rectangle() && markerRT != new Rectangle())
+                        {
+                            if (Math.Abs(markerLT.X - markerLB.X) > markerRT.Width)
+                                continue;
+                        }
+
                         bmp.Dispose();
                         return maxNum;
                     }
@@ -916,16 +922,50 @@ namespace eDoctrinaUtils
                 }
                 //}
                 //TimeSpan ts = DateTime.Now - dt;
+                if (maxNum == 4 || factorIter > 0)
+                {
+                    bmp.Dispose();
+                    return maxNum;
+                }
+
                 if (maxNum > 2)
                 {
+                    if (markerRT != new Rectangle() && markerRB != new Rectangle())
+                    {
+                        if (Math.Abs(markerRT.X - markerRB.X) > markerRB.Width + markerRB.Width / 2)
+                            continue;
+                        if (markerLTet != new Rectangle() && IsSquare(markerLTet))
+                            if (Math.Abs(markerRT.X - markerRB.X) > markerRB.Width / 2)
+                                continue;
+                        if (Math.Abs(markerRT.Right - markerRB.Right) > markerRB.Width)
+                            continue;
+                    }
+                    if (markerLT != new Rectangle() && markerLB != new Rectangle())
+                    {
+                        if (Math.Abs(markerLT.X - markerLB.X) > markerLB.Width)
+                            continue;
+                        if (Math.Abs(markerLT.X - markerLB.X) > markerLB.Width)
+                            continue;
+                    }
+                    if (markerLT != new Rectangle() && markerRT != new Rectangle())
+                    {
+                        if (Math.Abs(markerLT.X - markerLB.X) > markerRT.Width)
+                            continue;
+                    }
                     bmp.Dispose();
                     return maxNum;
                 }
-                else if (factorIter > 0)
-                {
-                    bmp.Dispose();
-                    return maxNum;
-                }
+
+                //if (maxNum > 2)
+                //{
+                //    bmp.Dispose();
+                //    return maxNum;
+                //}
+                //else if (factorIter > 0)
+                //{
+                //    bmp.Dispose();
+                //    return maxNum;
+                //}
             }
             if (bmp != null)
                 bmp.Dispose();
@@ -2316,6 +2356,7 @@ namespace eDoctrinaUtils
         }
         //-------------------------------------------------------------------------
         private Rectangle GetRectangle(Point[] curvePoints, out Point leftAnchor, int incrWidth = 0, int incrHeight = 0)
+        //, int incrWidth = 1, int incrHeight = 1//???
         {
             leftAnchor = new System.Drawing.Point(int.MaxValue, 0);
             if (curvePoints.Length == 0)
@@ -3170,9 +3211,11 @@ namespace eDoctrinaUtils
                 font = new Font(fontName, 36, FontStyle.Bold);
             }
             glueFilterUsed = false;
+
             //bmp.Save("TextRecognize2.bmp", ImageFormat.Bmp);
-            if (filterType != -1 && filterType != double.MaxValue && (filterType >= .75 || filterType < .7))
-                font = new Font(fontName, 36, FontStyle.Bold);
+
+            //if (filterType != -1 && filterType != double.MaxValue && (filterType >= .75 || filterType < .7))
+            font = new Font(fontName, 36, FontStyle.Bold);
 
             Brush brush = new SolidBrush(Color.Black);//Albertus Medium Albertus Extra Bold
             Bitmap clipped = null;
@@ -3344,7 +3387,7 @@ namespace eDoctrinaUtils
 
                     if (lastSymbolRectangle == Rectangle.Empty && glueFilterUsed && r.Height < rn.Height / 3)//???
                         break;
-
+                    //r.Width++; r.Height++;
                     if (r.Width > r.Height * 1.5)
                     {
                         if (!raspFilterUsed)
@@ -3452,7 +3495,8 @@ namespace eDoctrinaUtils
                             //bmp2.Save("DrawString.bmp", ImageFormat.Bmp);
 
                             Rectangle r2 = new Rectangle(-1, -1, -1, -1);
-                            GetBounds(bmp2, ref r2);
+                            GetBounds(bmp2, ref r2); //r2.Width++;
+
                             //double kr1 = (double)clipped.Height / clipped.Width;
                             //double kr2 = (double)r2.Height / r2.Width;
                             //double kr = Math.Abs(kr1 - kr2);
@@ -3470,7 +3514,11 @@ namespace eDoctrinaUtils
                             //растянуть нарисованный символ до размера вырезанного
                             g2.DrawImage(bmp3, 0, 0, clipped.Width, clipped.Height);//- 1- 1
                             g2.Dispose();
-                            //bmp3.Save("clipped2.bmp", ImageFormat.Bmp);
+
+                            //bmp2.Save("bmp2.bmp", ImageFormat.Bmp);
+                            //bmp3.Save("bmp3.bmp", ImageFormat.Bmp);
+                            //clipped.Save("clipped2.bmp", ImageFormat.Bmp);
+
                             int matchPics = 0;
                             int blackBmp2 = 0, blackClipped = 0;//
                             for (int m = 0; m < bmp2.Width; m++)
@@ -3488,7 +3536,7 @@ namespace eDoctrinaUtils
                                         blackClipped++;
                                     }
 
-                                    if (color == c)
+                                    if (color == c)//color != argbWhite && 
                                     {
                                         matchPics++;
                                     }
@@ -3503,7 +3551,7 @@ namespace eDoctrinaUtils
                             //double totalProc = (double)matchPics / blackClipped;
                             //double totalProc = (double)matchPics / blackBmp2;
                             double totalProc = (double)matchPics / (clipped.Width * clipped.Height);//(clipped.Width * clipped.Height) - matchPics blackBmp2
-                            double isBlank = (double)blackClipped / (clipped.Width * clipped.Height);
+                            //double isBlank = (double)blackClipped / (clipped.Width * clipped.Height);
                             if (maxProc < totalProc)// && isBlank < .6
                             {
                                 memNumb = ns;
@@ -3562,6 +3610,7 @@ namespace eDoctrinaUtils
                     x2 = r.Right + clipped.Height;
                     if (x2 >= bmp.Width)
                         x2 = bmp.Width - 1;
+                    y = lastSymbolRectangle.Y + lastSymbolRectangle.Height / 2;
                     dist = x2;
                     #endregion
                 }
@@ -3670,22 +3719,16 @@ namespace eDoctrinaUtils
             Color color;
             Color argbWhite = Color.FromArgb(255, 255, 255);
             if (r2 == Rectangle.Empty)
-            {
                 r2 = new Rectangle(0, 0, bmp.Width, bmp.Height);
-            }
             for (int j = r2.X; j < r2.X + r2.Width; j++)
             {
                 if (r.X != -1)
-                {
                     break;
-                }
                 for (int l = r2.Y; l < r2.Y + r2.Height; l++)
                 {
                     color = bmp.GetPixel(j, l);
                     if (color == argbWhite)
-                    {
                         continue;
-                    }
                     else
                     {
                         r.X = j;
@@ -3696,16 +3739,12 @@ namespace eDoctrinaUtils
             for (int j = r2.Y; j < r2.Y + r2.Height; j++)
             {
                 if (r.Y != -1)
-                {
                     break;
-                }
                 for (int l = r2.X; l < r2.X + r2.Width; l++)
                 {
                     color = bmp.GetPixel(l, j);
                     if (color == argbWhite)
-                    {
                         continue;
-                    }
                     else
                     {
                         r.Y = j;
@@ -3717,19 +3756,15 @@ namespace eDoctrinaUtils
             for (int l = r2.Y + r2.Height - 1; l >= r2.Y; l--)
             {
                 if (r.Height != -1)
-                {
                     break;
-                }
                 for (int j = r2.X; j < r2.X + r2.Width; j++)
                 {
                     color = bmp.GetPixel(j, l);
                     if (color == argbWhite)
-                    {
                         continue;
-                    }
                     else
                     {
-                        r.Height = l - r.Y;
+                        r.Height = l - r.Y;// + 1 add+1//???
                         break;
                     }
                 }
@@ -3738,19 +3773,15 @@ namespace eDoctrinaUtils
             for (int j = r2.X + r2.Width - 1; j >= r2.X; j--)
             {
                 if (r.Width != -1)
-                {
                     break;
-                }
                 for (int l = r2.Y + r2.Height - 1; l >= r2.Y; l--)
                 {
                     color = bmp.GetPixel(j, l);
                     if (color == argbWhite)
-                    {
                         continue;
-                    }
                     else
                     {
-                        r.Width = j - r.X;
+                        r.Width = j - r.X;// + 1add+1???
                         break;
                     }
                 }
@@ -5390,8 +5421,9 @@ namespace eDoctrinaUtils
            , OcrAppConfig defaults
            , ref Rectangle sheetIdentifierBarCodeRectangle
            , bool alignmentOnly
-            //, ref string qrCodeText
-            , bool isRotate = false
+           , bool isRotate = false
+           , bool isCut = false
+           , bool ShetIdManualySet = false
            )
         {
             Regions regions = null;
@@ -5548,10 +5580,11 @@ namespace eDoctrinaUtils
                                 int markersCount = MarkersFind(bmp, ref markerLT, ref markerRT, ref markerLB, ref markerRB, markerLTet);
                                 //bmp.Save("MarkersFind.bmp", ImageFormat.Bmp);
 
-                                if (!markerExist && markersCount == 2 && !halfUsed)//img == null
+                                if (!markerExist && markersCount == 2
+                                    && !halfUsed && !isRotate && !isCut && !ShetIdManualySet)//img == null
                                 {
                                     halfUsed = true;
-                                    Exception ex;
+                                    //Exception ex;
                                     if (markerLT != Rectangle.Empty && markerRT != Rectangle.Empty)
                                     {
                                         //bmp = CopyBitmap(bmp, new Rectangle(0, 0, bmp.Width, bmp.Height / 2));
@@ -5620,6 +5653,12 @@ namespace eDoctrinaUtils
                                         , defaults.EmptyScanDarknessPercent, defaults.RemoveEmptyScans))
                                         ? "Empty scan" : "Markers not found ";
                                     {
+                                        if (halfUsed)
+                                        {
+                                            bmp = (Bitmap)Bitmap.FromFile(frameFileName);
+                                            Exception ex;
+                                            bmp = NormalizeBitmap(bmp, out ex);
+                                        }
                                         return null;
                                     }
                                 }
@@ -5995,6 +6034,8 @@ namespace eDoctrinaUtils
             , bool alignmentOnly
             , ref string qrCodeText
             , bool isRotate = false
+            , bool isCut = false
+            , bool ShetIdManualySet = false
             )
         {
             bool halfUsed = false;
@@ -6032,7 +6073,7 @@ namespace eDoctrinaUtils
                 int rotateParameter = 0;
                 double heightAndWidthRatioBmp = (double)bmp.Width / bmp.Height;
 
-                //bmp.Save("GetSheetIdentifier.bmp",ImageFormat.Bmp);// = NormalizeBitmap(bmp, out ex);
+                //bmp.Save("GetSheetIdentifier.bmp", ImageFormat.Bmp);// = NormalizeBitmap(bmp, out ex);
 
                 double heightAndWidthRatio = (lastSheetIdentifier != "")
                     ? regionsList[GetRegionsIndex(lastSheetIdentifier, regionsList)].heightAndWidthRatio
@@ -6045,7 +6086,10 @@ namespace eDoctrinaUtils
                 }
                 Result result1 = null;
                 int regionsNumb = -1;
-                if (defaults.recQRCode && defaults.SheetIdEnum.Count > 0 && !alignmentOnly)
+                if (defaults.recQRCode && defaults.SheetIdEnum.Count > 0
+                    //&& (string.IsNullOrEmpty(sheetIdentifier) || !alignmentOnly
+                    //)
+                    )
                 {
                     for (int i = 0; i < 2; i++)
                     {
@@ -6187,7 +6231,9 @@ namespace eDoctrinaUtils
                        , ref sheetIdentifierBarCodeRectangle
                        , alignmentOnly
                        , isRotate
-                        );
+                       , isCut
+                       , ShetIdManualySet
+                       );
                 }
                 if (barCodesPrompt == "Markers not found ")
                 {
@@ -6303,11 +6349,12 @@ namespace eDoctrinaUtils
 
                                 //bmp.Save("MarkersFind.bmp", ImageFormat.Bmp);
 
-                                if (!markerExist && markersCount == 2 && !halfUsed)
+                                if (!alignmentOnly && !markerExist && markersCount == 2
+                                    && !halfUsed && !isRotate && !isCut && !ShetIdManualySet)
                                 {
                                     halfUsed = true;
                                     alignmentOnly = false;
-                                    Exception ex;
+                                    //Exception ex;
                                     if (markerLT != Rectangle.Empty && markerRT != Rectangle.Empty)
                                     {
                                         //bmp = CopyBitmap(bmp, new Rectangle(0, 0, bmp.Width, bmp.Height / 2));
@@ -7222,11 +7269,28 @@ namespace eDoctrinaUtils
             , bool isRotate = false)
         {
             if (isRotate)
+            {
+                GetRectangles(ref curRect, ref etRect, ref deltaxEt, ref deltaX, markerLT, markerRT, markerRB
+               , markerLB, markerLTet, markerRTet, markerRBet, markerLBet);
+
+                //Bitmap b2 = (Bitmap)bmp.Clone();
+                //using (Graphics g = Graphics.FromImage(b2))
+                //{
+                //    g.DrawRectangle(new Pen(Color.Green), curRect);
+                //}
+                //b2.Save("curRect.bmp", ImageFormat.Bmp);
+                //b2.Dispose();
+                if (curRect.Width != 0 && etRect.Width != 0 && curRect.Height != 0 && etRect.Height != 0)
+                {
+                    kx = (decimal)curRect.Width / etRect.Width;//Попытка деления на нуль
+                    ky = (decimal)curRect.Height / etRect.Height;
+                }
                 return "";
+            }
             string barCodesPrompt = "";
             if (curRect == Rectangle.Empty)
             {
-                barCodesPrompt = "Aligment error";
+                barCodesPrompt = "Aligment error 1";
                 return barCodesPrompt;
             }
             float angle = 0;
@@ -7308,7 +7372,7 @@ namespace eDoctrinaUtils
 
                 //b1.Save("AlignmentHighQualityBilinear.bmp", ImageFormat.Bmp);
 
-                //b1 = ConvertTo1Bit(b1);//для InterpolationMode.HighQualityBicubic
+                //b1 = ConvertTo1Bit(ref b1);//для InterpolationMode.HighQualityBicubic
                 bmp = (Bitmap)b1.Clone();
 
                 //bmp.Save("Alignment.bmp", ImageFormat.Bmp);
@@ -7322,6 +7386,16 @@ namespace eDoctrinaUtils
                 }
                 GetRectangles(ref curRect, ref etRect, ref deltaxEt, ref deltaX, markerLT, markerRT, markerRB
                 , markerLB, markerLTet, markerRTet, markerRBet, markerLBet);
+
+                //Bitmap b2 = (Bitmap)bmp.Clone();
+                //using (Graphics g = Graphics.FromImage(b2))
+                //{
+                //    g.DrawRectangle(new Pen(Color.Green), curRect);
+                //}
+                //b2.Save("curRect.bmp", ImageFormat.Bmp);
+                //b2.Dispose();
+
+
                 kx = (decimal)curRect.Width / etRect.Width;
                 ky = (decimal)curRect.Height / etRect.Height;
                 //delta = (int)Math.Round((decimal)deltaxEt * kx);
@@ -7360,7 +7434,7 @@ namespace eDoctrinaUtils
             }
             //}
             //if (angle > .5)
-            if (!float.IsNaN(angle) && Math.Abs(angle) > .5)
+            if (!float.IsNaN(angle) && Math.Abs(angle) > .6)
                 barCodesPrompt = "Aligment error sheet";
             return barCodesPrompt;
         }
@@ -7428,6 +7502,7 @@ namespace eDoctrinaUtils
                     , markerRTet.Right - markerLTet.X, markerRBet.Bottom - markerRTet.Bottom);//Y
                 deltaxEt = markerRTet.X - markerRBet.X;
                 deltaX = markerRT.X - markerRB.X;
+
             }
             else if (markerLB != new Rectangle() && markerLT != new Rectangle() && markerRB != new Rectangle())
             {
@@ -7681,7 +7756,18 @@ namespace eDoctrinaUtils
                 Rectangle r;
                 if (!manual)
                 {
-                    if (rotateParameter == 90)
+                    if (region.name.StartsWith("question_number"))
+                    {
+                        r = new Rectangle
+                                      (
+                                        rn.X - rn.Width
+                                      , rn.Y - rn.Height / 2
+                                      , rn.Width * 4
+                                      , rn.Height + rn.Height / 2
+                                      );
+
+                    }
+                    else if (rotateParameter == 90)
                     {
                         r = new Rectangle
                                       (
@@ -7706,7 +7792,8 @@ namespace eDoctrinaUtils
                     if (barcode != "")
                     {
                         currentBarCodeRectangle = rn;
-                    } //GetDeltaY(bmp, ref deltaY, ref currentBarCodeRectangle, ref r);
+                        //GetDeltaY(bmp, ref deltaY, ref currentBarCodeRectangle, ref r);
+                    }
                     else
                     {
                         r = VerticalBarcodeDetect(bmp, x, rn.Y + rn.Width, barcodeHeight);
@@ -7805,18 +7892,22 @@ namespace eDoctrinaUtils
                 #endregion
             }
             err = false;
-            if (!(barcode != "" && length > 0 && length - 2 == barcode.Length))
-            //{
-            //    //if (region.type == "barCode&Text" && region.areas[1].type == "numbersText")
-            //    //{
-            //    //    if (Regex.Match(barcode, @"[\D]").Success)
-            //    //    {
-            //    //        err = true;
-            //    //        barcode = "";
-            //    //    }
-            //    //}
-            //}
-            //else
+            if ((barcode != "" && length > 0 && length - 2 == barcode.Length))
+            {
+                //if (region.name.StartsWith("question_number"))
+                //{
+                //    //deltaY = currentBarCodeRectangle.Y - y1 - VerticalBarcodeBorder;
+                //}
+                //if (region.type == "barCode&Text" && region.areas[1].type == "numbersText")
+                //{
+                //    if (Regex.Match(barcode, @"[\D]").Success)
+                //    {
+                //        err = true;
+                //        barcode = "";
+                //    }
+                //}
+            }
+            else
             {
                 err = true;
                 deltaY = 0;
@@ -7845,6 +7936,8 @@ namespace eDoctrinaUtils
                     y1 = deltaY + curRect.Y + (int)Math.Round((decimal)(arr.top - etRect.Y) * ky);
                     x2 = deltaX + curRect.X + (int)Math.Round((decimal)(rArr.Right - etRect.X) * kx);
                     y2 = deltaY + curRect.Y + (int)Math.Round((decimal)(rArr.Bottom - etRect.Y) * ky);
+                    if (region.name.StartsWith("question_number"))
+                        y1 -= rArr.Height / 2;//больше диапазон поиска
 
                     TextRecognizeTotal
                         (
@@ -8537,7 +8630,7 @@ namespace eDoctrinaUtils
 
                 r = MultiplyRectangle(r, factor);
                 int deltaY = r.Bottom - lastBannerMem.Bottom;// / factor
-                if (Math.Abs(deltaY) > (y2 - y1) / 8)//4(r.Width < lastBannerMem.Width - lastBannerMem.Width / 4) ||
+                if (Math.Abs(deltaY) > (y2 - y1) / 4)//8???(r.Width < lastBannerMem.Width - lastBannerMem.Width / 4) ||
                 {
                     if (factor != 1)
                     {
@@ -9258,13 +9351,9 @@ namespace eDoctrinaUtils
             int numbytes = bmpdata.Stride * bitmap.Height;
             byte[] bytedata = new byte[numbytes];
             IntPtr ptr = bmpdata.Scan0;
-
             Marshal.Copy(ptr, bytedata, 0, numbytes);
-
             bitmap.UnlockBits(bmpdata);
-
             return bytedata;
-
         }
         //-------------------------------------------------------------------------
         private int GetIndex(Dictionary<Bubble, Point[]> allContourMultiLine, Bubble b)
@@ -11626,7 +11715,7 @@ namespace eDoctrinaUtils
                 Rectangle bubble1 = bubblesOfRegion[0];
                 int caliberWidth = bubble1.Width / 6;//8
                 int caliberHeight = bubble1.Height / 6;//8
-
+                int maxBubblesDist = 10;//25// 49;//
                 //System.Windows.Forms.Application.DoEvents();
                 const int iter = 3;
                 bmpPres = ConvertTo1Bit(ref bmpPres);//!!!!
@@ -11702,8 +11791,8 @@ namespace eDoctrinaUtils
                     for (int line = indexOfFirstQuestion; line < indexOfFirstQuestion + amoutOfQuestions; line++)
                     {
                         #region for
-                        //if (token.IsCancellationRequested)
-                        //    return;
+                        if (token.IsCancellationRequested)
+                            return;
                         if (allContourMultiLine.Count > 0)
                         {
                             bubble = allContourMultiLine.Last().Key;
@@ -11735,7 +11824,7 @@ namespace eDoctrinaUtils
                                 bool badBubble = false;
                                 if (xn <= 0 || xn >= bmpPres.Width || yn <= 0 || yn >= bmpPres.Height)
                                 {
-                                    barCodesPrompt = "Calibration error";
+                                    barCodesPrompt = "Calibration error 9";
                                     return;
                                 }
                                 color = bmpPres.GetPixel(k, yn);//???заблокирована
@@ -11785,7 +11874,8 @@ namespace eDoctrinaUtils
                                     //    , contourLength
                                     //    , brightness
                                     //    );
-
+                                    if (r1.Width * r1.Height < 10)
+                                        continue;
                                     if (r1 == prevRectangle)
                                     {
                                         if (r1.Right < xn)//чрезмерный возврат влево
@@ -11885,6 +11975,8 @@ namespace eDoctrinaUtils
                                         }
                                         posX = 0;
                                     }
+                                    if (posX < 0)//???
+                                        posX = 0;
                                     int count;
                                     if (r1.X < xn)
                                         if (posXReal < 0 && r1.Right > xn)
@@ -11901,7 +11993,7 @@ namespace eDoctrinaUtils
                                     if (posX >= bubblesPerWidth)
                                         posX = bubblesPerWidth - 1;
 
-                                    if (contour1.Length >= contourLength)
+                                    if (contour1.Length >= contourLength)//!!!убрать?
                                         posX = bubblesPerWidth - 1;
 
                                     bubble = new Bubble();
@@ -11911,11 +12003,24 @@ namespace eDoctrinaUtils
                                     bubble.areaNumber = bubblesRegion;
                                     if (line - bubble.point.Y > 1)
                                         endBubblesRegions = true;
-                                    //if (prevRectangle == r1)
-                                    //{
-                                    //    continue;
-                                    //}
-                                    //prevRectangle = r1;
+
+                                    if (line == 1)//new???
+                                    {
+                                        if (posX > 0)
+                                        {
+                                            if (filterType > .9)
+                                            {
+                                                if (allContourMultiLine.Count == 0 && correct == 0 && count == 1)
+                                                {
+                                                    correct++;
+                                                    k = xn - 1;
+                                                    yn -= bubble1.Height / 2;
+                                                    continue;
+                                                }
+                                            }
+                                        }
+                                    }
+
                                     if (Math.Abs(r1.Width - bubble1.Width) <= caliberWidth
                                           && Math.Abs(r1.Height - bubble1.Height) <= caliberHeight
                                           && Array.IndexOf(factRectangle, r1) < 0
@@ -11937,8 +12042,20 @@ namespace eDoctrinaUtils
                                             correct = 0;
                                             int ynCalculated = (int)Math.Round((decimal)(bubblesRegions[bubblesRegion].Y + bubble1.Height / 2));
                                             deltaY = ynCalculated - yn;
+                                            //deltaY = (int)Math.Round((decimal)(bubblesRegions[bubblesRegion].Y - r1.Y));
                                             lastBannerBottom -= deltaY;
                                         }
+                                        //else
+                                        //{
+                                        //}
+                                        //if (posX == 0)
+                                        //{
+                                        //correct = 0;
+                                        //int ynCalculated = (int)Math.Round((decimal)(bubblesRegions[bubblesRegion].Y + bubble1.Height / 2));
+                                        //deltaY = ynCalculated - yn;
+                                        //deltaY = (int)Math.Round((decimal)(bubblesRegions[bubblesRegion].Y - r1.Y));
+                                        //lastBannerBottom -= deltaY;
+                                        //}
 
                                         if (allContourMultiLine.Count == 0
                                             && (posX > 0 && Math.Abs(dec) < (decimal).7) || posX == 0)
@@ -11971,7 +12088,7 @@ namespace eDoctrinaUtils
                                             firstBubblePerLine.point = new System.Drawing.Point(posX, line);
                                             firstBubblePerLine.subLine = bubblesSubLine;
                                         }
-                                        else if (posX > 0 && posX < bubblesPerWidth - 1)
+                                        else if (posX > 0 && posX < bubblesPerWidth)// - 1!!!
                                         {
                                             //if (bubble.Equals(prevGoodBubble))
                                             //{
@@ -12094,6 +12211,23 @@ namespace eDoctrinaUtils
                                         //b3.Save("bubbles2.bmp", ImageFormat.Bmp);
                                         //b3.Dispose();
 
+                                        //if (line == 1)
+                                        //{
+                                        //    if (posX > 0)
+                                        //    {
+                                        //        if (filterType > .9)
+                                        //        {
+                                        //            if (allContourMultiLine.Count == 0 && correct == 0)
+                                        //            {
+                                        //                correct++;
+                                        //                k = xn - 1;
+                                        //                yn -= bubble1.Height / 2;
+                                        //                continue;
+                                        //            }
+                                        //        }
+                                        //    }
+                                        //}
+
                                         if (correct == 1 && r1.Y < lastBannerBottom)//&& count > bubblesPerWidth
                                         {//врезались в баннер
                                             correct++;
@@ -12195,7 +12329,7 @@ namespace eDoctrinaUtils
                                                             && r1.Y - factRectangle[factRectangle.Length - 2].Y >
                                                             diffBubble + diffBubble / 2)
                                                         {
-                                                            barCodesPrompt = "Calibration error";
+                                                            barCodesPrompt = "Calibration error 7";
                                                             return;
                                                         }
                                                     }
@@ -12271,6 +12405,9 @@ namespace eDoctrinaUtils
                                         bubble.areaNumber = bubblesRegion;
                                         bubble.point = bubble.point = new System.Drawing.Point(0, line);
                                         bubble.subLine = 0;
+
+
+
                                         if (!allContourMultiLine.ContainsKey(bubble))
                                         {
                                             //if (r1.Y < lastBannerBottom)
@@ -12324,6 +12461,15 @@ namespace eDoctrinaUtils
                                 {
                                     break;
                                 }
+
+                                //Bitmap b23 = (Bitmap)bmpPres.Clone();
+                                //using (Graphics g = Graphics.FromImage(b23))
+                                //{
+                                //    g.DrawEllipse(new Pen(Color.Red), xn - 4, k - 4, 8, 8);
+                                //}
+                                //b23.Save("bubbles.bmp", ImageFormat.Bmp);
+                                //b23.Dispose();
+
                                 double f = color.GetBrightness();
                                 //if (color != argbWhite)
                                 if (f < brightness)
@@ -12352,10 +12498,9 @@ namespace eDoctrinaUtils
                                        , brightness
                                     );
                                     if (contour1 == null
-                                        || r1.Size.Equals(new System.Drawing.Size(0, 0)))
-                                    {
+                                        || r1.Width * r1.Height < 10)
                                         continue;
-                                    }
+
                                     if (p == new System.Drawing.Point(int.MaxValue, 0))
                                     {
                                         k += bubbleStepY;
@@ -12371,7 +12516,6 @@ namespace eDoctrinaUtils
                                     //b3.Save("bubbles2.bmp", ImageFormat.Bmp);
                                     //b3.Dispose();
 
-
                                     posX = (int)Math.Round((decimal)(r1.Y - bubblesRegions[bubblesRegion].Y) / diffBubble);
                                     if (posX < 0 && contour1.Length < contourLength)
                                     {
@@ -12386,6 +12530,8 @@ namespace eDoctrinaUtils
                                         }
                                         posX = 0;
                                     }
+                                    if (posX < 0)
+                                        posX = 0;
                                     int count = (int)Math.Round((double)(r1.Bottom - k) / diffBubble);
                                     //if (count == 0)
                                     //{
@@ -12396,8 +12542,8 @@ namespace eDoctrinaUtils
 
                                     if (posX >= bubblesPerWidth)
                                         posX = bubblesPerWidth - 1;
-                                    if (contour1.Length >= contourLength)
-                                        posX = bubblesPerWidth - 1;
+                                    //if (contour1.Length >= contourLength)
+                                    //    posX = bubblesPerWidth - 1;
 
                                     bubble = new Bubble();
                                     bubble.areaNumber = bubblesRegion;
@@ -12409,11 +12555,18 @@ namespace eDoctrinaUtils
                                     if (prevRectangle == r1)
                                         continue;
                                     prevRectangle = r1;
-
+                                    //deltaY = 0;//!!!
                                     if (Math.Abs(r1.Width - bubble1.Width) <= caliberWidth
                                           && Math.Abs(r1.Height - bubble1.Height) <= caliberHeight
                                           && Array.IndexOf(factRectangle, r1) < 0)
                                     {//хороший пузырь
+
+                                        if (posX == 0 && bubblesRegion == 0)//&& correct != 0
+                                        {
+                                            deltaY = -(int)Math.Round((decimal)(bubblesRegions[bubblesRegion].Y - r1.Y));
+                                            lastBannerBottom -= deltaY;
+                                        }
+
 
                                         if (posX == 0)
                                         {
@@ -12425,7 +12578,7 @@ namespace eDoctrinaUtils
                                             contourLength = contour1.Length * 4;
                                         try
                                         {
-                                            if (posX > 0 && posX < bubblesPerWidth - 1)
+                                            if (posX > 0 && posX < bubblesPerWidth)// - 1!!!
                                             {
                                                 bubble = new Bubble();
                                                 bubble.areaNumber = bubblesRegion;
@@ -12591,7 +12744,6 @@ namespace eDoctrinaUtils
                                         }
                                         else
                                         {
-
                                             bubble = new Bubble();
                                             bubble.areaNumber = bubblesRegion;
                                             bubble.point = bubble.point = new System.Drawing.Point(0, line);
@@ -12861,7 +13013,7 @@ namespace eDoctrinaUtils
                     }
                     CalcPercent:
                     int minContourLength = int.MaxValue;
-                    int maxBubblesDist;
+                    //int maxBubblesDist;
                     int goodBubbleNumber = -1;
                     const int factor = 2;
                     int[] axisX = new int[1];
@@ -12869,9 +13021,11 @@ namespace eDoctrinaUtils
                     int[] axisYSubline = new int[1];
                     if (i > 0)
                     {
+                        //maxCountRectangles = AddMaxCountRectangles();
                         foreach (var item in maxCountRectangles)
                         {
                             item.Value.isChecked = false;
+                            item.Value.rectangle = new Rectangle();
                         }
                     }
 
@@ -12935,10 +13089,11 @@ namespace eDoctrinaUtils
                     //b.Dispose();
 
                     double blackBrightness;
-                    if (filterType > 0 && filterType < .5)
+                    if (filterType > 0 && filterType < .49)//.5
                         blackBrightness = .92f;
                     else if (filterType > 0 && filterType < .6)
                         blackBrightness = .88f;
+
                     else if (filterType > 0 && filterType < .7)
                         blackBrightness = .85f;
                     else if (filterType > 0 && filterType < .8)
@@ -12953,6 +13108,28 @@ namespace eDoctrinaUtils
                         blackBrightness = .55f;
                     else
                         blackBrightness = .6f;
+
+
+                    //if (filterType > 0 && filterType < .5)
+                    //    blackBrightness = .92f;
+                    //else if (filterType > 0 && filterType < .6)
+                    //    blackBrightness = .88f;
+                    //else if (filterType > 0 && filterType < .7)
+                    //    blackBrightness = .85f;
+                    //else if (filterType > 0 && filterType < .8)
+                    //    blackBrightness = .83f;//.8f
+                    //else if (filterType > 0 && filterType <= .9)
+                    //    blackBrightness = .8f;//.75
+                    ////else if (filterType > 0 && filterType <= 1)
+                    ////    blackBrightness = .75;//.8f;//
+                    //else if (filterType > 0 && filterType < 2 && filterType > 1.35)
+                    //    blackBrightness = .72f;
+                    //else if (filterType > 0 && filterType < 2 && filterType > 1.1)
+                    //    blackBrightness = .75f;
+                    //else if (filterType > 2)
+                    //    blackBrightness = .55f;
+                    //else
+                    //    blackBrightness = .6f;
 
                     //if (filterType > 4)
                     //    blackBrightness = .5;
@@ -12996,7 +13173,7 @@ namespace eDoctrinaUtils
 
                         //bmpPres.Save("ResizeBitmap3.bmp", ImageFormat.Bmp);
                     }
-                    maxBubblesDist = 10;//25// 49;//
+                    //maxBubblesDist = 10;//25// 49;//
                     goodBubbleNumber = GetGoodBubbleNumber(allContourMultiLine, factRectangle, minContourLength, goodBubbleNumber);
                     prevCurve = new System.Drawing.Point[0];
                     bubblesRegion = 0;
@@ -13029,8 +13206,10 @@ namespace eDoctrinaUtils
                             areaNumber = bubblesRegion;
                             //factStepY = (int)Math.Round((decimal)(bubblesRegions[bubblesRegion].Height
                             // bubblesPerLine[bubblesRegion]));
-                            if (String.IsNullOrEmpty(areas[0].bubblesOrientation)
-                              || areas[0].bubblesOrientation == "horizontal")
+                            bubblesPerWidth = bubblesPerLine[areaNumber];
+                            bubblesPerHeight = linesPerArea[areaNumber];
+                            if (String.IsNullOrEmpty(areas[bubblesRegion].bubblesOrientation)
+                              || areas[areaNumber].bubblesOrientation == "horizontal")
                                 bubbleStepY = (int)Math.Round((decimal)(lineHeight[bubblesRegion] - bubble1.Height));
                             else
                                 bubbleStepY = (int)Math.Round((decimal)(bubblesRegions[bubblesRegion].Height
@@ -13067,7 +13246,7 @@ namespace eDoctrinaUtils
                             {
                                 if (areas[bubblesRegion].subLinesAmount == 0)
                                 {
-                                    bubblesSubLinesStep[bubblesRegion] = (int)Math.Round((decimal)(areas[0].bubble.Width * 2) * kx);
+                                    bubblesSubLinesStep[bubblesRegion] = (int)Math.Round((decimal)(areas[bubblesRegion].bubble.Width * 2) * kx);
                                 }
                                 bubbleStepX = bubblesSubLinesStep[bubblesRegion];
                                 bubbleStepY = (int)Math.Round((decimal)(bubblesRegions[bubblesRegion].Height
@@ -13084,74 +13263,81 @@ namespace eDoctrinaUtils
                             //if (!openCircuit)
                             //    if (factRectangle[k].Size!=new Size())
                             //        openContour = true;
-
-                            KeyValuePair<Bubble, System.Drawing.Point[]> itm = allContourMultiLine.ElementAt(k);
-                            for (int kn = 1; kn < maxBubblesDist; kn++)
+                            KeyValuePair<Bubble, System.Drawing.Point[]> itm = new KeyValuePair<Bubble, Point[]>();
+                            if (String.IsNullOrEmpty(areas[bubblesRegion].bubblesOrientation)
+                             || areas[bubblesRegion].bubblesOrientation == "horizontal")
                             {
-                                n = k + kn;
-                                if (n <= allContourMultiLine.Count - 1)
+                                //KeyValuePair<Bubble, System.Drawing.Point[]> 
+                                itm = allContourMultiLine.ElementAt(k);
+                                for (int kn = 1; kn < maxBubblesDist; kn++)
                                 {
-                                    itm = allContourMultiLine.ElementAt(n);
-                                    //if ((regionRectangle.ElementAt(n).Value == regionRectangle.ElementAt(k).Value)
-                                    if ((itm.Key.areaNumber == item.Key.areaNumber)
-                                        && itm.Value.Length != 0
-                                        && itm.Value.Length <= minContourLength)
+                                    n = k + kn;
+                                    if (n <= allContourMultiLine.Count - 1)
                                     {
-                                        dist = Math.Abs(item.Key.point.X - itm.Key.point.X)
-                                             + Math.Abs(item.Key.point.Y - itm.Key.point.Y)
-                                             + Math.Abs(item.Key.subLine - itm.Key.subLine);
-                                        if (dist < minDist)
+                                        itm = allContourMultiLine.ElementAt(n);
+                                        //if ((regionRectangle.ElementAt(n).Value == regionRectangle.ElementAt(k).Value)
+                                        if ((itm.Key.areaNumber == item.Key.areaNumber)
+                                            && itm.Value.Length != 0
+                                            && itm.Value.Length <= minContourLength)
                                         {
-                                            if (!InsideContour(itm))
-                                                continue;
-                                        }
-                                        if (dist <= 1)
-                                        {
-                                            numCont = n;
-                                            break;
-                                        }
-                                        else
-                                        {
+                                            dist = Math.Abs(item.Key.point.X - itm.Key.point.X)
+                                                 + Math.Abs(item.Key.point.Y - itm.Key.point.Y)
+                                                 + Math.Abs(item.Key.subLine - itm.Key.subLine);
                                             if (dist < minDist)
                                             {
-                                                minDist = dist;
+                                                if (!InsideContour(itm))
+                                                    continue;
+                                            }
+                                            if (dist <= 1)
+                                            {
                                                 numCont = n;
+                                                break;
+                                            }
+                                            else
+                                            {
+                                                if (dist < minDist)
+                                                {
+                                                    minDist = dist;
+                                                    numCont = n;
+                                                }
                                             }
                                         }
                                     }
-                                }
-                                n = k - kn;
-                                if (n > -1)
-                                {
-                                    itm = allContourMultiLine.ElementAt(n);
-                                    if ((itm.Key.areaNumber == item.Key.areaNumber)
-                                        && itm.Value.Length != 0 && itm.Value.Length <= minContourLength)
+                                    n = k - kn;
+                                    if (n > -1)
                                     {
-                                        dist = Math.Abs(item.Key.point.X - itm.Key.point.X)
-                                             + Math.Abs(item.Key.point.Y - itm.Key.point.Y)
-                                             + Math.Abs(item.Key.subLine - itm.Key.subLine);
-                                        if (dist < minDist)
+                                        itm = allContourMultiLine.ElementAt(n);
+                                        if ((itm.Key.areaNumber == item.Key.areaNumber)
+                                            && itm.Value.Length != 0 && itm.Value.Length <= minContourLength)
                                         {
-                                            if (!InsideContour(itm))
-                                                continue;
-                                        }
-                                        if (dist <= 1)
-                                        {
-                                            numCont = n;
-                                            break;
-                                        }
-                                        else
-                                        {
+                                            dist = Math.Abs(item.Key.point.X - itm.Key.point.X)
+                                                 + Math.Abs(item.Key.point.Y - itm.Key.point.Y)
+                                                 + Math.Abs(item.Key.subLine - itm.Key.subLine);
                                             if (dist < minDist)
                                             {
-                                                minDist = dist;
+                                                if (!InsideContour(itm))
+                                                    continue;
+                                            }
+                                            if (dist <= 1)
+                                            {
                                                 numCont = n;
+                                                break;
+                                            }
+                                            else
+                                            {
+                                                if (dist < minDist)
+                                                {
+                                                    minDist = dist;
+                                                    numCont = n;
+                                                }
                                             }
                                         }
                                     }
                                 }
                             }
-                            if (numCont > -1)
+                            //numCont = -1;
+                            if (numCont > -1 && (String.IsNullOrEmpty(areas[bubblesRegion].bubblesOrientation)
+                               || areas[bubblesRegion].bubblesOrientation == "horizontal"))
                             {//itm = замещающий, item = замещаемый
                                 int distX;
                                 int distY;
@@ -13199,7 +13385,7 @@ namespace eDoctrinaUtils
                                     );
                             }
                             else
-                                if (goodBubbleNumber > -1 && factRectangle[goodBubbleNumber].Size != new System.Drawing.Size())
+                            if (goodBubbleNumber > -1 && factRectangle[goodBubbleNumber].Size != new System.Drawing.Size())
                             {
                                 if (axisX.Length == 1)
                                 {
@@ -13224,9 +13410,16 @@ namespace eDoctrinaUtils
                                     //            , new Point(b2.Width, line / factor));
                                     //    }
                                     //}
+                                    //foreach (var line in axisX)
+                                    //{
+                                    //    using (Graphics g = Graphics.FromImage(b2))
+                                    //    {
+                                    //        g.DrawLine(new Pen(Color.Blue), new Point(line / factor, 0)
+                                    //            , new Point(line / factor, b2.Height));
+                                    //    }
+                                    //}
                                     //b2.Save("allAxisY.bmp", ImageFormat.Bmp);
                                     //b2.Dispose();
-
 
                                     if ((amoutOfQuestions <= bubblesPerHeight && axisY.Length < amoutOfQuestions)
                                         || (amoutOfQuestions >= bubblesPerHeight && axisY.Length < bubblesPerHeight))
@@ -13282,6 +13475,7 @@ namespace eDoctrinaUtils
                                             }
                                             axisY = listAxisY.ToArray();
                                             axisYSubline = listAxisYSubline.ToArray();
+
                                             //Bitmap b4 = (Bitmap)bmpPres.Clone();
                                             //foreach (var line in listAxisY)
                                             //{
@@ -13291,12 +13485,20 @@ namespace eDoctrinaUtils
                                             //            , new Point(b4.Width, line / factor));
                                             //    }
                                             //}
-                                            //b4.Save("allAxisY2.bmp", ImageFormat.Bmp);
+                                            //foreach (var line in axisX)
+                                            //{
+                                            //    using (Graphics g = Graphics.FromImage(b4))
+                                            //    {
+                                            //        g.DrawLine(new Pen(Color.Blue), new Point(line / factor, 0)
+                                            //            , new Point(line / factor, b4.Height));
+                                            //    }
+                                            //}
+                                            //b4.Save("allAxisXY.bmp", ImageFormat.Bmp);
                                             //b4.Dispose();
 
-                                            int yb = 0;
-                                            if (String.IsNullOrEmpty(areas[0].bubblesOrientation)
-                                            || areas[0].bubblesOrientation == "horizontal")
+                                            int yb = 0;//areas[bubblesRegion].bubblesOrientation == "horizontal"
+                                            if (String.IsNullOrEmpty(areas[bubblesRegion].bubblesOrientation)
+                                            || areas[bubblesRegion].bubblesOrientation == "horizontal")
                                             {
                                                 yb = (int)Math.Round((decimal)(bubblesRegions[bubblesRegion].Y + bubble1.Height / 2));
                                             }
@@ -13381,7 +13583,9 @@ namespace eDoctrinaUtils
                                 //{
                                 //    bestWalIndex = -1;
                                 //}
-                                if (itm.Key.subLine != axisYSubline[bestWalIndex])//Err!!!
+                                if (String.IsNullOrEmpty(areas[bubblesRegion].bubblesOrientation)
+                                    || areas[bubblesRegion].bubblesOrientation == "horizontal"
+                                    && itm.Key.subLine != axisYSubline[bestWalIndex])
                                 {//только для "horizontal"!!!
                                     int subLineStep = itm.Key.subLine - axisYSubline[bestWalIndex];
                                     moveY += (subLineStep * bubblesSubLinesStep[bubblesRegion]);
@@ -13428,7 +13632,7 @@ namespace eDoctrinaUtils
                                             {
                                                 factStepY = (double)(factRectangle[k].Y - prevGoodLineY)
                                                     / (item.Key.point.Y - bubble.point.Y);
-                                                bubble = item.Key;
+                                                //bubble = item.Key;//???
                                                 prevGoodLineY = factRectangle[k].Y;
                                             }
                                         }
@@ -13444,7 +13648,7 @@ namespace eDoctrinaUtils
                                             {
                                                 factStepY = (double)(factRectangle[k].Y - prevGoodLineY)
                                                     / (item.Key.point.X - bubble.point.X);
-                                                bubble = item.Key;
+                                                //bubble = item.Key;//???
                                                 prevGoodLineY = factRectangle[k].Y; //item.Key.point.X;
                                             }
                                         }
@@ -13453,6 +13657,7 @@ namespace eDoctrinaUtils
                             }
                             #endregion
                             goodBubble++;
+                            bubble = item.Key;
                             goodBubbleNumber = k;
                             //prevRectangle = factRectangle[k];
                             //prevCurve = item.Value;
@@ -13608,7 +13813,7 @@ namespace eDoctrinaUtils
                                     //color = lockBitmap.GetPixel(xn, yn);
                                     if (xn <= 0 || xn >= bmpPres.Width || yn <= 0 || yn >= bmpPres.Height)
                                     {
-                                        barCodesPrompt = "Calibration error";
+                                        barCodesPrompt = "Calibration error 8";
                                         return;
                                     }
 
@@ -13793,7 +13998,7 @@ namespace eDoctrinaUtils
                     }
                     CalibrationError:
 
-                    //Bitmap b3 = (Bitmap)bmpPres.Clone();
+                    //Bitmap b3 = (Bitmap)bmp.Clone();// bmpPres.Clone();
                     //foreach (Rectangle item in factRectangle)
                     //{
                     //    using (Graphics g = Graphics.FromImage(b3))
@@ -13803,10 +14008,33 @@ namespace eDoctrinaUtils
                     //}
                     //b3.Save("factRectangles2.bmp", ImageFormat.Bmp);
                     //b3.Dispose();
+
                     for (int k = 0; k < allContourMultiLine.Count - 1; k++)
                     {
                         KeyValuePair<Bubble, System.Drawing.Point[]> item = allContourMultiLine.ElementAt(k);
                         KeyValuePair<Bubble, System.Drawing.Point[]> itemNext = allContourMultiLine.ElementAt(k + 1);
+
+                        //Bitmap b = (Bitmap)bmp.Clone();
+                        //using (Graphics g = Graphics.FromImage(b))
+                        //{
+                        //    //g.DrawRectangle(new Pen(Color.Red), MultiplyRectangle(factRectangle[k], factor));
+                        //    g.DrawRectangle(new Pen(Color.Red),factRectangle[k]);
+                        //}
+                        //b.Save("Calibration error 5.bmp", ImageFormat.Bmp);
+                        //b.Dispose();
+
+                        if (maxCountRectangles.ContainsKey(item.Key))
+                            maxCountRectangles[item.Key].rectangle = factRectangle[k];
+                        else//можно не выдавать ошибку, но доработать rec.FindBubble
+                            barCodesPrompt = "Calibration error 5";
+
+                        if (k == allContourMultiLine.Count - 2)
+                        {
+                            if (maxCountRectangles.ContainsKey(itemNext.Key))
+                                maxCountRectangles[itemNext.Key].rectangle = factRectangle[k + 1];
+                            else
+                                barCodesPrompt = "Calibration error 5";
+                        }
                         if ((string.IsNullOrEmpty(areas[item.Key.areaNumber].bubblesOrientation)
                               || areas[item.Key.areaNumber].bubblesOrientation == "horizontal"))
                         {
@@ -13830,6 +14058,7 @@ namespace eDoctrinaUtils
                         //lockBitmap.UnlockBits();
                         bmpPres = (Bitmap)bmp.Clone();
                         //bmpPres = ConvertTo1Bit(ref bmpPres);
+                        maxBubblesDist = 4;
                         for (int j = 0; j < 2; j++)
                         {
                             using (Bitmap b2 = new Bitmap(bmpPres.Width / 2, bmpPres.Height / 2, PixelFormat.Format24bppRgb))

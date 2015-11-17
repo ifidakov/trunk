@@ -9,6 +9,7 @@ namespace eDoctrinaUtils
         public int top { get; set; }
         public int width { get; set; }
         public int height { get; set; }
+        public int indexOfFirstBubble { get; set; }//можно добавить в каждую арею
         public int lineHeight { get; set; }
         public int bubblesPerLine { get; set; }
         public int subLinesAmount { get; set; }
@@ -18,6 +19,5 @@ namespace eDoctrinaUtils
         public string bubbleLines { get; set; }
         public string bubblesOrientation { get; set; }
         public Rectangle bubble { get; set; }
-        //public int etalonStepX { get; set; }//FLEX "etalonStepX": 508,
     }
 }

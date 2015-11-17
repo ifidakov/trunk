@@ -18,6 +18,7 @@ namespace eDoctrinaUtils
             public bool recQRCode { get; set; }
             public bool autoRunEditorOnError { get; set; }
             public string serverName { get; set; }
+            public string updateServerName { get; set; }
             public string outputMode { get; set; }
             public string baseTempFolder { get; set; }
             public string fileMask { get; set; }

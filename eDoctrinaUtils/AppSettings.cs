@@ -7,9 +7,9 @@ namespace eDoctrinaUtils
     {
         public AppSettings()
         { }
-        
+
         protected string XMLFileName = "settings.xml";
-      
+
         [XmlIgnore]
         public bool SettingsExists;
 
@@ -29,7 +29,13 @@ namespace eDoctrinaUtils
             {
                 XmlSerializer ser = new XmlSerializer(fields.GetType());
                 TextReader reader = new StreamReader(XMLFileName);
-                fields = ser.Deserialize(reader);
+                try
+                {
+                    fields = ser.Deserialize(reader);
+                }
+                catch (System.Exception)
+                {
+                }
                 reader.Close();
             }
             return fields;

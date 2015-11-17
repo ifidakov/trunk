@@ -152,6 +152,7 @@
     </Compile>
     <Compile Include="OCRControl\BarCodeListItemControl.cs">
       <SubType>Component</SubType>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
     <Compile Include="OCRControl\BarCodeListItemControl.Designer.cs">
       <DependentUpon>BarCodeListItemControl.cs</DependentUpon>
@@ -230,6 +231,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="OCRControl\BarCodeListItemControl.resx">
       <DependentUpon>BarCodeListItemControl.cs</DependentUpon>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="OCRControl\BubblesAreaControl.resx">
       <DependentUpon>BubblesAreaControl.cs</DependentUpon>

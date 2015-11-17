@@ -8,6 +8,7 @@ namespace eDoctrinaUtils
     public class OcrAppConfigDefaults : OcrAppConfigFolders
     {
         public const string ServerNameDefault = "";
+        public const string UpdateServerNameDefault = "";
         public const string AppConfigFileName = "appConfig.json";
 
         protected const bool AutoStartDefault = true;

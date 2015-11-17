@@ -40,6 +40,7 @@ namespace eDoctrinaOcrEd
         SendToSupportForm sts;
         public static BarCodeListItemControl SelectedBarCodeItem = null;
         public static bool barCodeSel = false;
+        public static bool ShetIdManualySet = false;
         public static int maxAmoutOfQuestions = 0;
         public static int[] bubblesPerLine = new int[0];
         public static int[] linesPerArea = new int[0];
@@ -49,7 +50,7 @@ namespace eDoctrinaOcrEd
         public SettingsForm1 settingsForm1 = null;
 
         private OcrAppConfig defaults;
-        private ObservableCollection<MiniatureItem> MiniatureItems = new ObservableCollection<MiniatureItem>();
+        public ObservableCollection<MiniatureItem> MiniatureItems = new ObservableCollection<MiniatureItem>();
         private ObservableCollection<BarCodeItem> BarCodeItems = new ObservableCollection<BarCodeItem>();
         private RecognitionTools recTools = new RecognitionTools();
         Point begPoint = new Point();
@@ -117,25 +118,6 @@ namespace eDoctrinaOcrEd
         private void UpdateUII(string key, object value)
         {
             if (value.ToString().StartsWith("M") || value.ToString().StartsWith("A"))
-                //if (appSettings.Fields.ChbSheetId && lastSheetId != "")
-                //{
-                //    rec.SheetIdentifier = lastSheetId;
-                //    var selectedItem = MiniatureItems.First(x => x.Name == rec.SheetIdentifier);
-                //    if (selectedItem != null)
-                //    {
-                //        BoxSheet.SelectedItem = selectedItem;
-                //        miniatureList.SelectedItem = selectedItem;
-                //    }
-                //    //RecognizeBarcodes();
-                //    //foreach (var item in  BoxSheet.comboBox1.Items)
-                //    //{
-
-                //    //}
-                //    regions = recTools.GetRegions(lastSheetId, rec.regionsList);
-                //    int index = rec.regionsList.IndexOf(regions);
-                //    BoxSheet.SelectedIndex = index;// BoxSheet.comboBox1.Items.IndexOf(lastSheetId);
-                //    return;
-                //}
                 if (linsForm == null)
                 {
                     btnGrid.PerformClick();
@@ -220,7 +202,7 @@ namespace eDoctrinaOcrEd
             , this.RotateRightButton
             , this.btnRemoveNoise
             , this.rbtnRotate
-            //, this.rbtnBubbles
+            //, this.splitBtnRestore
             , this.rbtnClear
             , this.rbtnCut
             , this.btnInvert
@@ -317,40 +299,48 @@ namespace eDoctrinaOcrEd
         public OcrEditorSettings appSettings;
         private void LoadSettings()
         {
-            defaults = new OcrAppConfig();
-            appSettings = new OcrEditorSettings();
-            appSettings.Load();
-            if (!appSettings.SettingsExists)
+            try
+            {
+                defaults = new OcrAppConfig();
+                appSettings = new OcrEditorSettings();
+                appSettings.Load();
+                if (!appSettings.SettingsExists)
+                {
+                    SaveSettings();
+                }
+                else
+                {
+                    this.WindowState = appSettings.Fields.WindowState;
+                    this.Location = appSettings.Fields.WindowLocation;
+                    if (appSettings.Fields.WindowSize != new Size())
+                        this.Size = appSettings.Fields.WindowSize;
+                    try
+                    {
+                        this.splitContainer1.SplitterDistance = appSettings.Fields.SplitterDistanceActions;
+                    }
+                    catch (Exception)
+                    {
+                        //this.splitContainer1.SplitterDistance = 328;
+                    }
+                    this.splitContainer2.SplitterDistance = appSettings.Fields.SplitterDistanceBubble;
+                    this.splitContainer3.SplitterDistance = appSettings.Fields.SplitterDistanceMiniature;
+                    this.splitContainer4.SplitterDistance = appSettings.Fields.SplitterDistanceLens;
+                    this.DarknessManualySet.Checked = appSettings.Fields.DarknessManualySet;
+                    this.nudPerCentBestBubble.Value = appSettings.Fields.NudPerCentBestBubble;
+                    this.nudPerCentEmptyBubble.Value = appSettings.Fields.NudPerCentEmptyBubble;
+                    try
+                    {
+                        this.nudZoom.Value = appSettings.Fields.NudZoomValue;
+                    }
+                    catch (Exception)
+                    {
+                        this.nudZoom.Value = 2;
+                    }
+                }
+            }
+            catch (Exception)
             {
                 SaveSettings();
-            }
-            else
-            {
-                this.WindowState = appSettings.Fields.WindowState;
-                this.Location = appSettings.Fields.WindowLocation;
-                this.Size = appSettings.Fields.WindowSize;
-                try
-                {
-                    this.splitContainer1.SplitterDistance = appSettings.Fields.SplitterDistanceActions;
-                }
-                catch (Exception)
-                {
-                    //this.splitContainer1.SplitterDistance = 328;
-                }
-                this.splitContainer2.SplitterDistance = appSettings.Fields.SplitterDistanceBubble;
-                this.splitContainer3.SplitterDistance = appSettings.Fields.SplitterDistanceMiniature;
-                this.splitContainer4.SplitterDistance = appSettings.Fields.SplitterDistanceLens;
-                this.DarknessManualySet.Checked = appSettings.Fields.DarknessManualySet;
-                this.nudPerCentBestBubble.Value = appSettings.Fields.NudPerCentBestBubble;
-                this.nudPerCentEmptyBubble.Value = appSettings.Fields.NudPerCentEmptyBubble;
-                try
-                {
-                    this.nudZoom.Value = appSettings.Fields.NudZoomValue;
-                }
-                catch (Exception)
-                {
-                    this.nudZoom.Value = 2;
-                }
             }
         }
         //-------------------------------------------------------------------------
@@ -388,6 +378,9 @@ namespace eDoctrinaOcrEd
             //watcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.Size;
             ////OnChanged(null, null);
             //watcher.EnableRaisingEvents = true;//Begin watching.
+
+            Recognize.CreateUpdatesJson(ProductVersion.ToString());//!!!!!!
+
             string[] appDirArr = Regex.Split(Environment.CurrentDirectory, "\\W+");
             if (appDirArr.Length > 0)
             {
@@ -726,33 +719,17 @@ namespace eDoctrinaOcrEd
                     }
 
                     rec.VerifySheetManual(BarCodeItems.ToList(), rec.BubbleItems.ToList());
+                    allAreasNaturalSize = new Rectangle[0];
                 }
                 catch (Exception)
                 {
+                    allAreasNaturalSize = new Rectangle[0];
                     VerifyButton.Enabled = false;
                     NextButton.Enabled = true;
                     DeleteButton.Enabled = true;
                     Status = StatusMessage.NULL;
                     return;
                 }
-                //bool emty = true;
-                //for (int k = 0; k < rec.BubbleItems.Count; k++)
-                //{
-                //    if (rec.BubbleItems[k].CheckedBubble.isChecked)
-                //    {
-                //        emty = false;
-                //        break;
-                //    }
-                //}
-                //if (emty)
-                //{
-                //    if (MessageBox.Show("Are you sure you want verify this sheet? No answers selected."
-                //        , Text, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
-                //    {
-                //        Status = StatusMessage.NULL;
-                //        return;
-                //    }
-                //}
                 lastSheetId = rec.SheetIdentifier;
                 lastTestId = testId;
                 lastAmoutOfQuestions = rec.AmoutOfQuestions.ToString();
@@ -768,12 +745,12 @@ namespace eDoctrinaOcrEd
         //-------------------------------------------------------------------------
         private void NextButton_Click(object sender, EventArgs e)
         {
+            log.LogMessage("Next Proccessing Button Click");
             if (rec == null) return;
             if (linsForm != null)
                 linsForm_FormClosing(null, new FormClosingEventArgs(CloseReason.None, false));
             if (rec.SheetIdentifier != null)// && defaults.NotSupportedSheets.IndexOf(rec.SheetIdentifier) < 0
                 lastSheetId = rec.SheetIdentifier;
-            log.LogMessage("Next Proccessing Button Click");
             if (backgroundWorker.IsBusy)
             {
                 CancelBackgroundWorker();
@@ -783,6 +760,7 @@ namespace eDoctrinaOcrEd
             {
                 DeleteToNextProccessingFolder();
             }
+            allAreasNaturalSize = new Rectangle[0];
             errList.Clear();
             VerifyErrList();
         }
@@ -809,12 +787,12 @@ namespace eDoctrinaOcrEd
         //-------------------------------------------------------------------------
         private void DeleteButton_Click(object sender, EventArgs e)
         {
+            log.LogMessage("Delete Button Click");
             if (linsForm != null)
                 linsForm_FormClosing(null, new FormClosingEventArgs(CloseReason.None, false));
             //linsForm.Close();DeleteButton.Focus();
             if (rec == null) return;
-
-            log.LogMessage("Delete Button Click");
+            allAreasNaturalSize = new Rectangle[0];
             var fn = Path.GetFileName(rec.FileName);
             var fna = utils.GetFileAuditName(fn);
             if (Status == StatusMessage.Delete
@@ -859,6 +837,7 @@ namespace eDoctrinaOcrEd
             }
             errList.Clear();
             VerifyErrList();
+            allAreasNaturalSize = new Rectangle[0];
             Status = StatusMessage.NULL;
         }
         //-------------------------------------------------------------------------
@@ -992,6 +971,7 @@ namespace eDoctrinaOcrEd
         private void RecognizeAllButton_Click(object sender, EventArgs e)
         {
             log.LogMessage("Recognize All Button Click");
+            //rec.BarCodesPrompt = "";//???
             if (cbDoNotProcess.Checked)
             {
                 cbDoNotProcess.Checked = false;
@@ -1031,6 +1011,7 @@ namespace eDoctrinaOcrEd
             rbtnGrid.Checked = false;
             rbtnRotate.Checked = false;
             rbtnCut.Checked = false;
+            rbtnClear.Checked = false;
         }
         //-------------------------------------------------------------------------
         private void RecognizeBubblesButton_Click(object sender, EventArgs e)
@@ -1184,7 +1165,11 @@ namespace eDoctrinaOcrEd
         private void BoxSheet_SelectedValueChanged(object sender, EventArgs e)
         {
             if (BoxSheet.SelectedIndex == -1)
+            {
+                foreach (MiniatureListItemControl item in miniatureList.ControlList)
+                    item.BackColor = SystemColors.Control;
                 return;
+            }
             if (Array.IndexOf(defaults.NotSupportedSheets.ToArray(), BoxSheet.SelectedItem.ToString()) > -1)
             {
                 MessageBox.Show("Not supported sheet", Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -1203,21 +1188,21 @@ namespace eDoctrinaOcrEd
                 rec.SheetIdentifier = BoxSheet.SelectedItem.ToString();
                 btnGrid.Enabled = BoxSheet.SelectedIndex != -1 && !string.IsNullOrEmpty(rec.SheetIdentifier);
                 rec.regions = recTools.GetRegions(rec.SheetIdentifier, rec.regionsList);
-                //InitLinsForm(false);
                 rec.LastSheetIdentifier = rec.SheetIdentifier;
-                //if (rec.SheetIdentifier == "FLEX")
-                //{
-                //    rec.maxAmoutOfQuestions = rec.linesPerArea[0];
-                //}
-                //else
-                //{
+
+                var selectedItem = MiniatureItems.First(x => x.Name == rec.SheetIdentifier);
+                if (selectedItem != null)
+                    miniatureList.SelectedItem = selectedItem;
+
                 if (rec.linesPerArea != null)
                     rec.maxAmoutOfQuestions = rec.linesPerArea.Sum();
-                //}
                 errList.Clear();
                 lblErr.Visible = false;
                 ShowImage(false);
-                RecognizeAll(true);
+                if (ShetIdManualySet)
+                    RecognizeAll(true);
+                else
+                    RecognizeAll(false);
             }
         }
         #endregion
@@ -1311,7 +1296,6 @@ namespace eDoctrinaOcrEd
                                 //    bItem.Value = "";
                                 //    break;
                         }
-                        rec.bubbles_per_lineErr = false;
                         rec.bubblesPerLine[0] = Convert.ToInt32(obj.Item.Value);
                         rec.areas[0].bubblesPerLine = rec.bubblesPerLine[0];
                         bac = CreateNewBubblesAreaControl(rec.areas, rec.AmoutOfQuestions);
@@ -1383,7 +1367,7 @@ namespace eDoctrinaOcrEd
                 //rec.lineNumbers[index]=
                 if (bac != null)
                     bac.indexOfFirstQuestion = 1;
-                BarCodeListItemControl b = barCodeList.ControlList[item.Name] as BarCodeListItemControl;
+                //BarCodeListItemControl b = barCodeList.ControlList[item.Name] as BarCodeListItemControl;
             }
             switch (item.Name)
             {
@@ -1592,8 +1576,10 @@ namespace eDoctrinaOcrEd
                         bmp.Dispose();
                         ShowImage(true);
                         isCut = true;
+                        //isRotate = true;
                         if (appSettings.Fields.RecAfterCut)
                         {
+                            ShetIdManualySet = false;
                             RecognizeAllButton.PerformClick();
                         }
                         return;
@@ -1813,9 +1799,9 @@ namespace eDoctrinaOcrEd
                     {
                         if (linsForm == null || linsForm.IsDisposed)
                             CreateLinsForm();
-
-                        linsForm.Visible = true;// linsForm.Show();
-                                                //linsFormIsVisible = true;
+                        if (rec.SheetIdentifier != "FANDP")
+                            linsForm.Visible = true;// linsForm.Show();
+                                                    //linsFormIsVisible = true;
                         if (areaNaturalSize.Left < 0)
                         {
                             areaNaturalSize.Width -= areaNaturalSize.Left;
@@ -1967,7 +1953,8 @@ namespace eDoctrinaOcrEd
                                         manualNearestArea = k;
                                     }
                                 }
-                                int maxBubblesCountOfArea = (int)Math.Round((double)bubblesRegions.areas[i].height / bubblesRegions.areas[i].lineHeight);
+                                int maxBubblesCountOfArea = rec.linesPerArea[0];//кроме "FANDP"!!!
+                                //int maxBubblesCountOfArea = (int)Math.Round((double)etalonAreas[i].height /etalonAreas[i].lineHeight);
                                 //double EtStepY = (double)(bubblesRegions.areas[i].height
                                 //- bubblesRegions.areas[i].bubble.Height * rec.linesPerArea[i]) / (rec.linesPerArea[i] - 1);
                                 double EtStepY = (double)(bubblesRegions.areas[i].height
@@ -1989,15 +1976,21 @@ namespace eDoctrinaOcrEd
                                     //r.Y = deltaY + (int)Math.Round((decimal)(etalonAreas[i].bubble.Y * ky));
                                     r.Y = factAreas[0].top + (int)Math.Round((double)(etalonAreas[i].top - etalonAreas[manualNearestArea].top) * ky);
                                 r.Width = (int)(Math.Round(widthEt * kx));//deltaX +
-                                r.Height = (factAreas[i].subLinesAmount - factAreas[manualNearestArea].subLinesAmount) * (int)Math.Round((double)(etalonAreas[i].subLineHeight * ky))//factAreas[i].subLineHeight
-                                    + ((int)(Math.Round(((double)(factAreas[manualNearestArea].height)//- ((int)(Math.Round((double)(EtStepY * ky))))
-                                    * factLinesPerArea[i]) / factLinesPerArea[manualNearestArea])));
-                                //r.Height = (factAreas[i].subLinesAmount - factAreas[manualNearestArea].subLinesAmount) * factAreas[i].subLineHeight
-                                //+ (int)(Math.Round((double)((factAreas[manualNearestArea].height - (int)(Math.Round((double)(EtStepY * ky))
-                                /// factLinesPerArea[manualNearestArea] * factLinesPerArea[i])))));
-
+                                int diff = factAreas[i].subLinesAmount - factAreas[manualNearestArea].subLinesAmount;
+                                //int lineStep = (int)(Math.Round((double)(etalonAreas[manualNearestArea].lineHeight * ky)));
+                                //r.Height = diff * (int)Math.Round((double)(etalonAreas[i].subLineHeight * ky))//factAreas[i].subLineHeight
+                                ////+ lineStep
+                                //+ ((int)(Math.Round(((double)(factAreas[manualNearestArea].height)//- ((int)(Math.Round((double)(EtStepY * ky))))
+                                //* factLinesPerArea[i]) / factLinesPerArea[manualNearestArea])))
+                                ////- lineStep/
+                                //;
+                                //int diff = factAreas[i].subLinesAmount - factAreas[manualNearestArea].subLinesAmount;
+                                //r.Height = diff * (int)Math.Round((double)(etalonAreas[i].subLineHeight * ky))//factAreas[i].subLineHeight
+                                //   - (maxBubblesCountOfArea - diff) * (int)Math.Round((double)(etalonAreas[i].lineHeight * ky))
+                                //    + ((int)(Math.Round(((double)(factAreas[manualNearestArea].height)//- ((int)(Math.Round((double)(EtStepY * ky))))
+                                //    * factLinesPerArea[i]) / factLinesPerArea[manualNearestArea])));
                                 //r.Width = (int)(Math.Round(widthEt * kx));//deltaX +
-                                //r.Height = (int)(Math.Round(heightEt * ky));
+                                r.Height = (int)(Math.Round(heightEt * ky));
                                 if (r.X < 0)
                                     r.X = 0;
                                 if (r.Y < 0)
@@ -2055,7 +2048,6 @@ namespace eDoctrinaOcrEd
             {
             }
         }
-        //-------------------------------------------------------------------------
         private void SetAmoutOfQuestions(int amout_of_questions)
         {
             //if (Status != StatusMessage.Verify || Status != StatusMessage.Delete || Status != StatusMessage.ChangeAmoutOfQuestions)
@@ -2162,6 +2154,7 @@ namespace eDoctrinaOcrEd
                 }
                 else
                 {
+                    StatusLabel.Text = "";
                     pictureBox1.Cursor = Cursors.Default;
                 }
             }
@@ -2697,6 +2690,7 @@ namespace eDoctrinaOcrEd
                 //UpdateUI("filesInQueueStatusLabel", fnArr.Count().ToString());
                 UpdateUI("filesInQueueStatusLabel", countAllFraves.ToString());
                 string dir = Path.Combine(OcrAppConfig.TempEdFolder, "Deferred");
+                fnArr = new string[0];
                 if (Directory.Exists(dir))
                 {
                     fnArr = utils.GetSupportedFilesFromDirectory(dir, SearchOption.TopDirectoryOnly);
@@ -3007,7 +3001,7 @@ namespace eDoctrinaOcrEd
                       else UpdateUI("StatusLabel", "Sheet identifier not recognized");
 
                       if (rec != null && (rec.BarCodesPrompt.StartsWith("S"))
-                && appSettings.Fields.ChbSheetId && lastSheetId != "")
+                && !ShetIdManualySet && appSettings.Fields.ChbSheetId && lastSheetId != "")
                       {
                           rec.SheetIdentifier = lastSheetId;
                           var selectedItem = MiniatureItems.First(x => x.Name == rec.SheetIdentifier);
@@ -3172,6 +3166,7 @@ namespace eDoctrinaOcrEd
             rec.areas = (RegionsArea[])e.Areas.Clone();
             bac = CreateNewBubblesAreaControl(rec.areas, rec.AmoutOfQuestions);
             DrawBubbleItems();
+            VerifyButton.Enabled = true;
         }
         //-------------------------------------------------------------------------
         private void DrawBubbleItems(bool draw = true)
@@ -3270,6 +3265,11 @@ namespace eDoctrinaOcrEd
                     + Environment.NewLine
                     + ex.Message, Text, MessageBoxButtons.OK, MessageBoxIcon.Stop);
                 rec = new Recognize(fileName, new OcrAppConfig(), new System.Threading.CancellationToken(), false);
+                //rec.Audit.error = ex.Message;//rec.Audit == null
+                if (MessageBox.Show(rec.Exception.Message + @"
+Open processing file in explorer?"
+                            , Text, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                    btnOpenFile.PerformClick();
                 return;
             }
             double widthPerHeightPatio = 0;
@@ -3303,6 +3303,7 @@ namespace eDoctrinaOcrEd
         {
             if (cbDoNotProcess.Checked)
                 return;
+            //rec.BarCodesPrompt = "";//new???
             RecognizeAll(false);
         }
         //-------------------------------------------------------------------------
@@ -3346,6 +3347,18 @@ namespace eDoctrinaOcrEd
             {
                 BoxSheet.SelectedItem = selectedItem;
                 miniatureList.SelectedItem = selectedItem;
+                foreach (MiniatureListItemControl item in miniatureList.ControlList)
+                {
+                    if (item.Name == selectedItem.Name)
+                        item.BackColor = SystemColors.ActiveCaption;
+                    else
+                        item.BackColor = SystemColors.Control;
+                }
+                //MiniatureListItemControl mc
+                //    = (MiniatureListItemControl)miniatureList.ControlList[selectedItem.Name];
+                //mc.BackColor = SystemColors.ActiveCaption;
+                //mc.Refresh();
+                //mc.MiniatureListItemControl_Select(mc, null);выбирает контролл
             }
             //if (!rec.barCodesPrompt.StartsWith("Markers"))
             //{
@@ -3401,11 +3414,6 @@ namespace eDoctrinaOcrEd
         //-------------------------------------------------------------------------
         private void DoWork(object sender, DoWorkEventArgs e)
         {
-            //if ((rec != null && rec.Status == RecognizeAction.Cancelled) && linsForm != null && linsForm.Visible)
-            //{
-            //    return;
-            //}
-
             if (e.Argument != null)
             {
                 var obj = e.Argument as string[];
@@ -3417,10 +3425,11 @@ namespace eDoctrinaOcrEd
                         qrCodeText = obj[1];
                     else
                         qrCodeText = "";
-                    //if (rec != null && rec.Status == RecognizeAction.Cancelled && string.IsNullOrEmpty(qrCodeText))
-                    //{
-                    //    return;
-                    //}
+                    if (ShetIdManualySet && key == "RecAll")
+                    {
+                        key = "RecAllAlignmentOnly";
+                    }
+
                     switch (key)
                     {
                         case "new Recognize":
@@ -3429,13 +3438,11 @@ namespace eDoctrinaOcrEd
                             isRotate = false;
                             isCut = false;
                             isClear = false;
-
                             usedPrevTool = false;
+                            ShetIdManualySet = false;
                             string fileName = obj.Last();
                             rec = new Recognize(fileName, defaults, cancelSource.Token);
-
                             rec.BubbleItems = new ObservableCollection<BubbleItem>();
-
                             errList.Clear();
                             if (rec != null && rec.Audit != null && !string.IsNullOrEmpty(rec.Audit.error))
                             {
@@ -3461,7 +3468,7 @@ namespace eDoctrinaOcrEd
 
                             if (string.IsNullOrEmpty(obj.Last()) && !string.IsNullOrEmpty(lastSheetId))
                             {
-                                rec.RecAll(lastSheetId, false, ref qrCodeText, isRotate);
+                                rec.RecAll(lastSheetId, false, ref qrCodeText, isRotate, isCut, ShetIdManualySet);
                             }
                             else
                             {
@@ -3475,23 +3482,28 @@ namespace eDoctrinaOcrEd
                                     }));
                             break;
                         case "RecAllAlignmentOnly":
-                            rec.RecAll(obj.Last(), true, ref qrCodeText, isRotate);
+                            rec.RecAll(obj.Last(), true, ref qrCodeText, isRotate, isCut, ShetIdManualySet);
                             break;
                         case "SelectedSheetIdentifier":
-                            rec.SelectedSheetIdentifier(obj.Last(), ref qrCodeText, isRotate);
+                            rec.SelectedSheetIdentifier(obj.Last(), ref qrCodeText, isRotate, isCut, ShetIdManualySet);
                             break;
                         case "BarcodesRecognition":
                             rec.BarcodesRecognition(qrCodeText);
                             break;
                         case "BubblesRecognition":
-                            //if (etalonAreas.Length == 0)
                             CreateEtalonAreas();
-
-                            //if (bubblesPerLine.Length != 0 && rec.areas.Length != bubblesPerLine.Length)
-                            //{
                             GetAreasSettings();
-                            //}
-
+                            if (!string.IsNullOrEmpty(rec.Audit.error) && rec.Audit.error.StartsWith("Calibration"))
+                            {
+                                //if (rpf != null && rpf.Disposing)
+                                //CloseProcessingForm();
+                                rec.Audit.error = "";
+                                Invoke(new MethodInvoker(delegate
+                                {
+                                    rbtnGrid.PerformClick();
+                                }));
+                                break;
+                            }
                             if (rec.bubbles_per_lineErr)
                             {
                                 if (rpf != null && rpf.Disposing)
@@ -3640,9 +3652,10 @@ namespace eDoctrinaOcrEd
             if (rec == null)
                 return;
             ioHelper.ReDelete();
-            if (rec.Exception != null && rec.Exception.Message.IndexOf("multipage file") > 0)
+            if (rec.Exception != null && rec.Exception.Message.ToLower().IndexOf("file") > 0)
             {
-                if (MessageBox.Show("Open processing multi-page file in explorer?"
+                if (MessageBox.Show(rec.Exception.Message + @"
+Open processing file in explorer?"
                             , Text, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                     btnOpenFile.PerformClick();
                 return;
@@ -3681,11 +3694,9 @@ namespace eDoctrinaOcrEd
                 RecognizeBubblesButton.Enabled = false;
                 StopRecognizeButton.Enabled = false;
 
-                VerifyButton.Enabled = false;
+                //VerifyButton.Enabled = false;
 
-                //if (rec != null)
                 rec.Status = RecognizeAction.Cancelled;
-
                 UpdateUI("StatusLabel", "Recognizing was cancelled");
                 CloseProcessingForm();
 
@@ -3699,6 +3710,8 @@ namespace eDoctrinaOcrEd
                     NextButton.PerformClick();
                     return;
                 }
+                pictureBox1.Image = (Bitmap)rec.Bitmap.Clone();//
+                ShowImage();
 
                 if (appSettings.Fields.UsePrevTool && !usedPrevTool)
                 {
@@ -3734,7 +3747,7 @@ namespace eDoctrinaOcrEd
                 }
 
                 if (rec != null && (BoxSheet.SelectedIndex == -1)
-                && appSettings.Fields.ChbSheetId && lastSheetId != "")
+               && !ShetIdManualySet && appSettings.Fields.ChbSheetId && lastSheetId != "")
                 {
                     rec.SheetIdentifier = lastSheetId;
                     var selectedItem = MiniatureItems.First(x => x.Name == rec.SheetIdentifier);
@@ -3771,8 +3784,6 @@ namespace eDoctrinaOcrEd
             if (e.Result != null)
             {
                 var key = e.Result as string[];
-                //if (key == null)
-                //    key = e.Result as string;
                 if (key == null || String.IsNullOrEmpty(key[0])) return;
                 switch (key[0])
                 {
@@ -3783,9 +3794,10 @@ namespace eDoctrinaOcrEd
                             return;
                         }
                         ShowImage();
+                        RecognizeAllButton.Enabled = true;
                         if (rec.Audit != null && !string.IsNullOrEmpty(rec.Audit.error))
                         {
-                            if (rec.Audit.error.StartsWith("M") || rec.Audit.error.StartsWith("S"))//
+                            if (!rec.Audit.error.StartsWith("M") && !rec.Audit.error.StartsWith("S"))
                             {
                                 rec.Status = RecognizeAction.WaitingForUserResponse;
                                 rec.InitParamsBeforeSearchmarkers();
@@ -3798,41 +3810,31 @@ namespace eDoctrinaOcrEd
                                     rec.LastSheetIdentifier = lastSheetId;
                                     if (selectedItem != null)
                                     {
-                                        rec.SheetIdentifier = lastSheetId;//selectedItem.ToString();
-                                        //miniatureList.SelectedItem = selectedItem;
+                                        rec.SheetIdentifier = lastSheetId;
                                         BoxSheet.SelectedItem = selectedItem;
                                     }
-
-
-                                    //for (int i = 0; i < BoxSheet.Items.Count; i++)
-                                    //{
-                                    //    if (BoxSheet.Items[i].ToString() == lastSheetId)
-                                    //    {
-                                    //        BoxSheet.SelectedIndex = i;
-                                    //        break;
-                                    //    }
-                                    //}
-
-                                    //BoxSheet.SelectedItem = lastSheetId;
-                                    //rec.InitParamsBeforeSearchmarkers();
                                     return;
                                 }
-                                else
-                                {
-                                    RecognizeAllButton.Enabled = true;
-                                    return;
-                                }
+                                //else if (rec.Audit.error.StartsWith("M") || rec.Audit.error.StartsWith("S"))
+                                //{
+                                //    SetUsePrevTool();
+                                //    return;
+                                //}
+                            }
+                            else
+                            {
+                                SetUsePrevTool();
+                                rec.Status = RecognizeAction.WaitingForUserResponse;
+                                return;
                             }
                         }
-                        if (rec.Audit == null || string.IsNullOrEmpty(rec.Audit.error) || !rec.Audit.error.StartsWith("M"))
+                        if (rec.Audit == null || string.IsNullOrEmpty(rec.Audit.error)
+                            || (!rec.Audit.error.StartsWith("M") || !rec.Audit.error.StartsWith("S")))
                             RecognizeAll();
-                        else
-                            RecognizeAllButton.Enabled = true;
+                        //else
+                        //    RecognizeAllButton.Enabled = true;
                         break;
                     case "RecAll":
-                        //if (rec.SheetIdentifier == "FLEX")
-                        //    SizeFitButton_Click(null, null); //ShowImage(true);
-                        //else
                         ShowImage();
                         if (rec.Status != RecognizeAction.SearchMarkersFinished) //what buttons enabled?
                         {
@@ -3898,7 +3900,6 @@ namespace eDoctrinaOcrEd
                         if (rec.Status != RecognizeAction.SearchMarkersFinished) //what buttons enabled?
                             return;
                         RecognizeBarcodes(key[1]);
-
                         break;
                     case "SelectedSheetIdentifier":
                         RecognizeBarcodes();
@@ -3914,7 +3915,7 @@ namespace eDoctrinaOcrEd
                         //CloseProcessingForm();
                         if (key[0] == "BubblesRecognition2" && (rec.Exception != null || !string.IsNullOrEmpty(rec.BarCodesPrompt)))
                         {
-                            if (rec.BarCodesPrompt == "Calibration error")
+                            if (rec.BarCodesPrompt.StartsWith("Calibration error"))
                             {
                                 MessageBox.Show
                                             ("Area(s) error"
@@ -3958,7 +3959,6 @@ namespace eDoctrinaOcrEd
                                 }
                                 if (verify)
                                 {
-                                    //CloseProcessingForm(); //rpf.Close();
                                     RecognizeBubblesButton.PerformClick();
                                 }
                                 else
@@ -4012,7 +4012,7 @@ namespace eDoctrinaOcrEd
                 VerifyButton.PerformClick();
             if (rec != null && (rec.BarCodesPrompt != null && (rec.BarCodesPrompt.StartsWith("M")
                 || rec.BarCodesPrompt.StartsWith("S")))
-                && appSettings.Fields.ChbSheetId && lastSheetId != "")
+                && !ShetIdManualySet && appSettings.Fields.ChbSheetId && lastSheetId != "")
             {
                 rec.SheetIdentifier = lastSheetId;
                 var selectedItem = MiniatureItems.First(x => x.Name == rec.SheetIdentifier);
@@ -4024,8 +4024,6 @@ namespace eDoctrinaOcrEd
                     rec.SheetIdentifier = selectedItem.ToString();
                 }
 
-                //regions = recTools.GetRegions(lastSheetId, rec.regionsList);
-                //rec.regions = regions;
                 if (rec.BarCodesPrompt.StartsWith("M"))
                 {
                     rec.Status = RecognizeAction.WaitingForUserResponse;// .SearchMarkersFinished
@@ -4209,6 +4207,7 @@ namespace eDoctrinaOcrEd
             {
                 //this.Focus();
                 rpf.Close();
+                //SetUsePrevTool();
                 if (!string.IsNullOrEmpty(rec.BarCodesPrompt) && appSettings.Fields.UsePrevTool)
                 {
                     foreach (var item in editorTools)
@@ -4270,7 +4269,7 @@ namespace eDoctrinaOcrEd
                 }
                 else
                 {
-                    if (appSettings.Fields.ChbSheetId && lastSheetId != "")
+                    if (!ShetIdManualySet && appSettings.Fields.ChbSheetId && lastSheetId != "")
                     {
                         rec.SheetIdentifier = lastSheetId;
                         var selectedItem = MiniatureItems.First(x => x.Name == rec.SheetIdentifier);
@@ -4288,6 +4287,44 @@ namespace eDoctrinaOcrEd
             }
             rpf = null;
         }
+
+        private void SetUsePrevTool()
+        {
+            //if (!string.IsNullOrEmpty(rec.BarCodesPrompt) && appSettings.Fields.UsePrevTool)
+            //{
+            foreach (var item in editorTools)
+            {
+                if (item.BackColor == Color.Cyan)
+                {
+                    toolTip2.ToolTipIcon = ToolTipIcon.Info;
+                    toolTip2.IsBalloon = true;
+
+                    toolTip2.SetToolTip(item, "Used this tool");
+                    toolTip2.ToolTipTitle = "Warning";
+                    //toolTip2.Show("Used this tool", item
+                    //    , new Point (item.Bounds.X,item.Bounds.Y), 2000);
+                    toolTip2.Show("Used this tool", item, 2000);
+
+                    if (item.Name == "btnRemoveNoise")
+                        continue;
+                    //toolTip2.Hide(item);
+                    Button b = item as Button;
+                    if (b != null)
+                    {
+                        b.PerformClick();
+                        return;
+                    }
+                    RadioButton r = item as RadioButton;
+                    if (r != null)
+                    {
+                        r.Checked = true;
+                        return;
+                    }
+                }
+            }
+            //}
+        }
+
         ////-------------------------------------------------------------------------
         //[DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.Winapi)]
         //internal static extern IntPtr GetFocus();
@@ -4817,11 +4854,13 @@ namespace eDoctrinaOcrEd
         //-------------------------------------------------------------------------
         private void InitLinsForm(bool BarCodeControlsBuilding)
         {
+            Application.DoEvents();
+            int qn = 0;
             try
             {
                 RecognizeAllButton.Enabled = true;
                 CreateEtalonAreas();
-                if (BarCodeControlsBuilding)
+                if (BarCodeControlsBuilding)// && (rec.areas == null || rec.areas.Length == 0))
                 {
                     rec.areas = (RegionsArea[])etalonAreas.Clone();
                 }
@@ -4885,19 +4924,20 @@ namespace eDoctrinaOcrEd
                                             //{
                                             if (itm.Name.StartsWith("question_number"))
                                             {
-                                                BarCodeItems.Remove(itm);
-                                                barCodeList.ControlList.Remove(barCodeList.ControlList[k]);
-                                                rec.BarCodeItems.RemoveAt(k);
-                                                goto rep;
+                                                qn++;
+                                                if (qn > rec.AmoutOfQuestions)
+                                                {
+                                                    BarCodeItems.Remove(itm);
+                                                    barCodeList.ControlList.Remove(barCodeList.ControlList[k]);
+                                                    rec.BarCodeItems.RemoveAt(k);
+                                                    goto rep;
+                                                }
                                             }
                                         }
                                         Array.Resize(ref rec.allBarCodeNames, BarCodeItems.Count);
                                         Array.Resize(ref rec.allBarCodeValues, BarCodeItems.Count);
-
-                                        rec.questionNumbers = new int[0];
+                                        Array.Resize(ref rec.questionNumbers, rec.AmoutOfQuestions);
                                         BarCodeControlsBuilding = true;
-                                        //linsForm = null;
-                                        //Status = StatusMessage.NULL;
                                     }
                                     amout_of_questionsIndex = j;
                                     string s = rec.allBarCodeValues[j];
@@ -4906,11 +4946,9 @@ namespace eDoctrinaOcrEd
                                         s = b.comboBox1.Text;
                                         rec.allBarCodeValues[j] = s;
                                     }
-
                                     try
                                     {
                                         j = Convert.ToInt32(s);
-                                        //SetRowsValue(j);
                                         amout_of_questions = j;
                                         amoutOfQuestions = j.ToString();
                                         SetRowsValue(amout_of_questions);
@@ -4952,7 +4990,6 @@ namespace eDoctrinaOcrEd
                                 Array.Resize(ref rec.questionNumbers, index);
                             }
                             index--;
-                            //rec.lineNumbers[index]=
                         }
                         switch (item.name)
                         {
@@ -5143,6 +5180,7 @@ namespace eDoctrinaOcrEd
                         BarCodeListItemControl b = barCodeList.ControlList["amout_of_questions"] as BarCodeListItemControl;
                         rbtnGrid.Enabled = false;//!!!
                         b.btnCheck.PerformClick();
+                        linsForm.Close();
                         linsForm = null;
                         return;
                     }
@@ -5180,7 +5218,7 @@ namespace eDoctrinaOcrEd
                         }
                         if (linsForm != null && BarCodeControlsBuilding)
                         {
-                            linsForm.nudCols.Value = factAreas[0].bubblesPerLine;
+                            linsForm.nudCols.Value = 4;// factAreas[0].bubblesPerLine;
                             linsForm.nudSubRows.Value = factAreas[0].subLinesAmount;
                         }
                     }
@@ -5295,7 +5333,28 @@ namespace eDoctrinaOcrEd
                     {
                         if (itm.name == "answers")
                         {
-                            etalonAreas = (eDoctrinaUtils.RegionsArea[])itm.areas.Clone();
+                            if (rec.SheetIdentifier != "FLEX")
+                            {
+                                etalonAreas = (RegionsArea[])itm.areas.Clone();
+                            }
+                            else
+                            {
+                                switch (rec.bubbles_per_lineFLEX)
+                                {
+                                    case 5:
+                                    case 6:
+                                        foreach (var item2 in rec.regionsListFLEX)
+                                        {
+                                            if (item2.regions[item2.regions.Length - 1].areas[0].bubblesPerLine == rec.bubbles_per_lineFLEX)
+                                            {
+                                                rec.regions = item2;
+                                                etalonAreas = (eDoctrinaUtils.RegionsArea[])item2.regions[item2.regions.Length - 1].areas.Clone();
+                                                break;
+                                            }
+                                        }
+                                        break;
+                                }
+                            }
                             break;
                         }
                     }
@@ -5736,7 +5795,7 @@ namespace eDoctrinaOcrEd
                         }
                         else
                         {
-                            linsForm.nudCols.Value = factAreas[(int)linsForm.nudArea.Value - 1].bubblesPerLine;
+                            linsForm.nudCols.Value = 4;// factAreas[(int)linsForm.nudArea.Value - 1].bubblesPerLine;
                         }
                         //linsForm.nudCols.Maximum = linsForm.nudCols.Value;
                     }
@@ -6002,8 +6061,15 @@ namespace eDoctrinaOcrEd
             else
             {
                 lblErr.Visible = false;
-                RecognizeAllButton.Enabled = true;
-                RecognizeAllButton.PerformClick();
+                if (rec != null)
+                    RecognizeAllButton.Enabled = true;
+                try
+                {
+                    RecognizeAllButton.PerformClick();
+                }
+                catch (Exception)
+                {
+                }
             }
         }
         //-------------------------------------------------------------------------
@@ -6237,18 +6303,46 @@ namespace eDoctrinaOcrEd
             //}
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void restartToolStripMenuItem_Click(object sender, EventArgs e)
         {//запустить экзешник для рестарта редактора и
-            //Environment.Exit(0);
+         //ProcessStartInfo psi = new ProcessStartInfo();
+         //psi.Arguments =new string[1] { Application.ExecutablePath };
+         //psi.FileName = "startApp.exe";
+         //Process.Start(psi);
             try
             {
-                Application.Restart();
+                log.LogMessage("Manual restart");
+                SaveSettings();
+                if (testUids.Test.Count > 0)
+                {
+                    var serializer = new SerializerHelper();
+                    serializer.SaveToFile(testUids, Path.Combine(OcrAppConfigDefaults.BaseTempFolder, "testUids.json"), Encoding.Unicode);
+                }
             }
             catch (Exception)
             {
             }
+            Process.Start("startApp.exe", Application.ExecutablePath);// + " a b c"
+            Environment.Exit(0);
+            //try
+            //{
+            //    Application.Restart();
+            //}
+            //catch (Exception)
+            //{
+            //}
         }
-
+        //-------------------------------------------------------------------------
+        private void checkForUpdatesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveSettings();
+            Process.Start("eDoctrinaOcrUpdate.exe");
+        }
         //-------------------------------------------------------------------------
         private void pictureBox2_MouseEnter(object sender, EventArgs e)
         {

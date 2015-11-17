@@ -535,7 +535,7 @@ namespace eDoctrinaUtils
                     //bmp.Save(temp, ImageFormat.Tiff);
                     //bmp.Dispose();
                     var sha1Hash = utils.GetSHA1FromFile(temp);
-
+                    //проверить на ""!!!
                     var tempFileName = OcrAppConfig.TempFramesFolder + sha1Hash + ".tiff";
                     var tempFileNameAudit = OcrAppConfig.TempFramesFolder + sha1Hash + ".audit";
                     log.LogMessage("Get frame page " + (i + 1).ToString() + " of " + pageCount.ToString() + " from " + sourceAudit.sourceFileName);

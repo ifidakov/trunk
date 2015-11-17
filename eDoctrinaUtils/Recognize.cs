@@ -13,7 +13,7 @@ using System.Drawing.Imaging;
 using System.Security.Cryptography;
 
 namespace eDoctrinaUtils
-{
+{// ^[^\/]+\.Save\("
     public class Recognize
     {
         Utils utils = new Utils();
@@ -29,6 +29,62 @@ namespace eDoctrinaUtils
         string district_id = "";
         string test_id = "";
         string amout_of_questions = "";
+
+        //-------------------------------------------------------------------------
+        static public Updates GetUpdates(string input)
+        {
+            Updates updates
+            = JsonConvert.DeserializeObject<Updates>(input);
+            return updates;
+        }
+        //-------------------------------------------------------------------------
+        static public void CreateUpdatesJson(string ProductVersion)
+        {
+            Updates upd = new Updates();
+            upd.version = ProductVersion;
+            upd.description = @" 
+Implementation tasks #185584, #185568.";
+            upd.files = new string[]
+            {
+//"Miniatures\\test.jpg",
+"eDoctrinaOcrUpdate.exe",
+"eDoctrinaOcrUpdate.pdb",
+"BitMiracle.LibTiff.NET.dll",
+"BitMiracle.LibTiff.NET.xml",
+"eDoctrinaOcrEd.exe",
+"eDoctrinaOcrEd.pdb",
+"eDoctrinaOcrWPF.exe",
+"eDoctrinaOcrWPF.pdb",
+"eDoctrinaUtils.dll",
+"eDoctrinaUtils.pdb",
+"eDoctrinaUtilsWPF.dll",
+"eDoctrinaUtilsWPF.pdb",
+"Emgu.CV.dll",
+"Emgu.CV.UI.dll",
+"Emgu.Util.dll",
+"Installer.exe",
+"Installer.pdb",
+"itextsharp.dll",
+"Newtonsoft.Json.dll",
+"Newtonsoft.Json.pdb",
+"Newtonsoft.Json.xml",
+"opencv_core220.dll",
+"opencv_highgui220.dll",
+"opencv_imgproc220.dll",
+"PDFLibNet.dll",
+"startApp.exe",
+"unins000.dat",
+"unins000.exe",
+"zxing.dll",
+"zxing.pdb",
+"zxing.presentation.dll",
+"zxing.presentation.pdb",
+"zxing.presentation.xml"
+            };
+            string output = JsonConvert.SerializeObject(upd);
+            File.WriteAllText("updates.json", output);
+        }
+        //-------------------------------------------------------------------------
         #region Constructor
         public Recognize(string fileName, OcrAppConfig defaults, CancellationToken token, bool auto = false
             , bool normalizeBitmap = true)
@@ -406,16 +462,17 @@ namespace eDoctrinaUtils
             RecAll(SelectedBoxSheetItem, false, ref qrCodeText);
         }
         //-------------------------------------------------------------------------
-        public void RecAll(string SelectedBoxSheetItem, bool alignmentOnly, ref string qrCodeText, bool isRotate = false)
+        public void RecAll(string SelectedBoxSheetItem, bool alignmentOnly
+            , ref string qrCodeText, bool isRotate = false, bool isCut = false, bool ShetIdManualySet = false)
         {
             begEx = DateTime.Now;
             InitParamsBeforeSearchmarkers();
             lastSheetIdentifier = SelectedBoxSheetItem;
 
             if (alignmentOnly)
-                SelectedSheetIdentifier(SelectedBoxSheetItem, ref qrCodeText, isRotate);
+                SelectedSheetIdentifier(SelectedBoxSheetItem, ref qrCodeText, isRotate, isCut, ShetIdManualySet);
             else
-                Searchmarkers(false, ref qrCodeText, isRotate);
+                Searchmarkers(false, ref qrCodeText, isRotate, isCut, ShetIdManualySet);
             if (regions != null && regions.indexOfFirstBubble != 0)
                 indexOfFirstBubble = regions.indexOfFirstBubble;
         }
@@ -468,7 +525,8 @@ namespace eDoctrinaUtils
             allFilterCount = 0;
         }
         //-------------------------------------------------------------------------
-        private void Searchmarkers(bool alignmentOnly, ref string qrCodeText, bool isRotate = false)
+        private void Searchmarkers(bool alignmentOnly, ref string qrCodeText
+            , bool isRotate = false, bool isCut = false, bool ShetIdManualySet = false)
         {
             BubbleItems.Clear();
             if (alignmentOnly)
@@ -476,7 +534,7 @@ namespace eDoctrinaUtils
                 var tempbarCodesPrompt = barCodesPrompt;
                 recTools.GetSheetIdentifier(ref bitmap, ref kx, ref ky, ref sheetIdentifier, ref lastSheetIdentifier
                     , regionsList, ref filterType, ref barCodesPrompt, out curRect, out etRect, deltaY
-                    , defaults, ref sheetIdentifierBarCodeRectangle, alignmentOnly, ref qrCodeText, isRotate);
+                    , defaults, ref sheetIdentifierBarCodeRectangle, alignmentOnly, ref qrCodeText, isRotate, isCut, ShetIdManualySet);
                 if (barCodesPrompt != "" && tempbarCodesPrompt != "" && tempbarCodesPrompt != barCodesPrompt)
                     barCodesPrompt = tempbarCodesPrompt;
                 sheetIdentifier = regions.SheetIdentifierName;
@@ -486,13 +544,13 @@ namespace eDoctrinaUtils
             {
                 regions = recTools.GetSheetIdentifier(ref bitmap, ref kx, ref ky, ref sheetIdentifier, ref lastSheetIdentifier
                 , regionsList, ref filterType, ref barCodesPrompt, out curRect, out etRect, deltaY
-                , defaults, ref sheetIdentifierBarCodeRectangle, alignmentOnly, ref qrCodeText, isRotate);
+                , defaults, ref sheetIdentifierBarCodeRectangle, alignmentOnly, ref qrCodeText, isRotate, isCut, ShetIdManualySet);
 
                 QrCode = qrCodeText;
                 if (cancellationToken.IsCancellationRequested)
                     return;
 
-                if (barCodesPrompt != "" || regions == null)
+                if (Auto && (barCodesPrompt != "" || regions == null) || !Auto && string.IsNullOrEmpty(QrCode) && (barCodesPrompt != "" || regions == null))//!!!
                 {
                     filterType = 0;
                     //if (Auto || string.IsNullOrEmpty(QrCode))
@@ -536,7 +594,8 @@ namespace eDoctrinaUtils
             NotifyUpdated(ChangedBarCodesPrompt, new RecognizeEventArgs(barCodesPrompt), null);
         }
         //-------------------------------------------------------------------------
-        public void SelectedSheetIdentifier(string BoxSheetSelectedValue, ref string qrCodeText, bool isRotate = false)
+        public void SelectedSheetIdentifier(string BoxSheetSelectedValue, ref string qrCodeText, bool isRotate = false
+            , bool isCut = false, bool ShetIdManualySet = false)
         {
             Status = RecognizeAction.InProcess;
             string barcode = BoxSheetSelectedValue;
@@ -548,7 +607,7 @@ namespace eDoctrinaUtils
             }
             lastSheetIdentifier = BoxSheetSelectedValue;
             sheetIdentifier = lastSheetIdentifier;
-            Searchmarkers(true, ref qrCodeText, isRotate);
+            Searchmarkers(true, ref qrCodeText, isRotate, isCut, ShetIdManualySet);
         }
         #endregion
         //-------------------------------------------------------------------------
@@ -568,7 +627,12 @@ namespace eDoctrinaUtils
                 }
             }
             if (!string.IsNullOrEmpty(qrCodeText))
-                filterType = 1;
+            {
+                if (!defaults.useStudentId)
+                    filterType = (1 + filterType) / 2;
+                else
+                    filterType = 1;
+            }
             else if (allFilterCount > 0)
                 filterType = allFilterType / allFilterCount;
             if (Auto && barCodesPrompt != "")
@@ -649,7 +713,7 @@ namespace eDoctrinaUtils
                     {
                         if (barCodesPromptMem.StartsWith("M") || barCodesPromptMem.StartsWith("A"))
                         {
-                            barCodesPrompt = "Aligment error";
+                            barCodesPrompt = "Aligment error 2";
                             deltaY = 0;
                             continue;
                         }
@@ -657,7 +721,7 @@ namespace eDoctrinaUtils
                         if (Math.Abs(deltaY) > ((y2 - y1) / 2) + 1)
                         {
                             // notConfident = true;
-                            barCodesPrompt = "Aligment error";
+                            barCodesPrompt = "Aligment error 3";
                             deltaY = 0;
                         }
                     }
@@ -870,7 +934,7 @@ namespace eDoctrinaUtils
                 }
             }
             if ((!string.IsNullOrEmpty(barcodeMem) && filterType > 0 && filterType < 10)
-                || string.IsNullOrEmpty(barcodeMem) && filterType > 0 && filterType < 3)
+                || string.IsNullOrEmpty(barcodeMem) && filterType > 0 && filterType < 3)//7!!!
             {
                 allFilterType += filterType;
                 allFilterCount++;
@@ -950,6 +1014,7 @@ namespace eDoctrinaUtils
             this.darknessPercent = darknessPercent;
             this.darknessDifferenceLevel = darknessDifferenceLevel;
         }
+        Dictionary<Bubble, CheckedBubble> maxCountRectangles;
         //-------------------------------------------------------------------------
         public void RecAndFindBubble
             (
@@ -963,7 +1028,9 @@ namespace eDoctrinaUtils
             //factRectangle = new Rectangle[0];
             //allContourMultiLine = new Dictionary<Bubble, Point[]>();
             //}
-            var maxCountRectangles = AddMaxCountRectangles();
+
+            //var
+            maxCountRectangles = AddMaxCountRectangles();
 
             //Bitmap.Save("recBitmap.bmp", System.Drawing.Imaging.ImageFormat.Bmp);
 
@@ -1031,7 +1098,7 @@ namespace eDoctrinaUtils
                 if (barCodesPrompt == "")
                 {
                     FillBubbleItems(maxCountRectangles);
-                    FillBubbleItemsRectangle(allContourMultiLine, factRectangle);
+                    //FillBubbleItemsRectangle(allContourMultiLine, factRectangle);//???
                     FindBubble(factRectangle, allContourMultiLine);
                 }
                 else
@@ -1076,7 +1143,7 @@ namespace eDoctrinaUtils
         }
         //-------------------------------------------------------------------------
         public void FillBubbleItemsRectangle(Dictionary<Bubble, Point[]> allContourMultiLine, Rectangle[] factRectangle)
-        {
+        {//можно не использовать?
             //DateTime dt = DateTime.Now;
             var BubbleItemsDict = BubbleItems.ToDictionary(x => x.Bubble);
             //TimeSpan ts = DateTime.Now - dt;
@@ -1158,15 +1225,22 @@ namespace eDoctrinaUtils
             int areaNumber = -1;
             int goodBubbleNumber = 0;
             int prevGoodLine = 0, prevGoodLineY = 0;
-            int maxBubblesDist = 129;//25;// 
+            int maxBubblesDist = 12900;//25;// 
             int[] axisX = new int[1];
             int[] axisY = new int[1];
             int[] axisYSubline = new int[1];
-            //Rectangle bubble1= Rectangle.Empty;
+            //Rectangle bubble1 = Rectangle.Empty;
             Rectangle bubble1 = bubblesOfRegion[0];
             Rectangle prevRectangle = Rectangle.Empty;
             Bubble bubble = new Bubble();
             double factStepY = bubble1.Height + bubbleStepY;
+
+            //for (int i = 0; i < maxCountRectangles.Count; i++)
+            //{
+            //    var itm = maxCountRectangles.ElementAt(i);
+            //    BubbleItems[i].CheckedBubble = itm.Value;
+            //}
+
             if (axisX.Length == 1)
             {
                 recTools.GetAxis
@@ -1270,7 +1344,7 @@ namespace eDoctrinaUtils
             {
                 BubbleItem item = BubbleItems[k];
                 int bubblesRegion = item.Bubble.areaNumber;
-                if (String.IsNullOrEmpty(areas[0].bubblesOrientation) || areas[0].bubblesOrientation == "horizontal")
+                if (String.IsNullOrEmpty(areas[bubblesRegion].bubblesOrientation) || areas[bubblesRegion].bubblesOrientation == "horizontal")
                 {
                     bubbleStepY = (int)Math.Round((decimal)(lineHeight[bubblesRegion] - bubble1.Height));
                     if (k == 0)
@@ -1281,9 +1355,10 @@ namespace eDoctrinaUtils
                     {
                         if (FirstBubbleItemOfArea != null && FirstBubbleItemOfArea.Bubble.areaNumber != item.Bubble.areaNumber)
                         {
-                            if (Math.Abs(item.CheckedBubble.rectangle.Y - FirstBubbleItemOfArea.CheckedBubble.rectangle.Y) >= FirstBubbleItemOfArea.CheckedBubble.rectangle.Height)
+                            if (Math.Abs(item.CheckedBubble.rectangle.Y - FirstBubbleItemOfArea.CheckedBubble.rectangle.Y)
+                                >= FirstBubbleItemOfArea.CheckedBubble.rectangle.Height)
                             {
-                                Exception = new Exception("Calibration error 3");
+                                //Exception = new Exception("Calibration error 3");
                                 barCodesPrompt = "Calibration error 3";
                                 var maxCountRectangles = AddMaxCountRectangles();
                                 BubbleItems.Clear();
@@ -1296,9 +1371,10 @@ namespace eDoctrinaUtils
                         {
                             if (FirstBubbleItemOfArea != null && item.Bubble.point.X == 0 && FirstBubbleItemOfArea.Bubble.point.Y != item.Bubble.point.Y)
                             {
-                                if (Math.Abs(item.CheckedBubble.rectangle.X - FirstBubbleItemOfArea.CheckedBubble.rectangle.X) >= FirstBubbleItemOfArea.CheckedBubble.rectangle.Height)
+                                if (Math.Abs(item.CheckedBubble.rectangle.X - FirstBubbleItemOfArea.CheckedBubble.rectangle.X)
+                                    >= FirstBubbleItemOfArea.CheckedBubble.rectangle.Height)
                                 {
-                                    Exception = new Exception("Calibration error 4");
+                                    //Exception = new Exception("Calibration error 4");
                                     barCodesPrompt = "Calibration error 4";
                                     var maxCountRectangles = AddMaxCountRectangles();
                                     BubbleItems.Clear();
@@ -1309,6 +1385,10 @@ namespace eDoctrinaUtils
                         }
                     }
                 }
+                //else
+                //{//для vertical
+
+                //}
             }
         }
         //-------------------------------------------------------------------------
@@ -2098,12 +2178,28 @@ namespace eDoctrinaUtils
                     }
                 }
             }
-            recTools.AppendOutput(ref totalOutput, answersPosition, bubble.point.X.ToString(), indexAnswersPosition, indexOfFirstBubble);
-            if (bubble.subLine < subStrSet.Length && lengthcurrentLineBubbles == positionInLine)
+            if ((areas[bubble.areaNumber].bubblesFormat == "single"))
             {
-                for (int n = bubble.subLine; n < subStrSet.Length; n++)
+                int index = indexOfFirstBubble;
+                if (areas[bubble.areaNumber].indexOfFirstBubble != 0)
+                    index = areas[bubble.areaNumber].indexOfFirstBubble;
+                recTools.AppendOutput(
+                      ref totalOutput
+                    , answersPosition
+                    , (bubble.point.X + (bubble.subLine * areas[bubble.areaNumber].bubblesPerLine)).ToString()
+                    , indexAnswersPosition
+                    , index//indexOfFirstBubble
+                    );
+            }
+            else
+            {
+                recTools.AppendOutput(ref totalOutput, answersPosition, bubble.point.X.ToString(), indexAnswersPosition, indexOfFirstBubble);
+                if (bubble.subLine < subStrSet.Length && lengthcurrentLineBubbles == positionInLine)
                 {
-                    recTools.AppendOutput(ref totalOutput, answersPosition, "~", indexAnswersPosition, indexOfFirstBubble);
+                    for (int n = bubble.subLine; n < subStrSet.Length; n++)
+                    {
+                        recTools.AppendOutput(ref totalOutput, answersPosition, "~", indexAnswersPosition, indexOfFirstBubble);
+                    }
                 }
             }
         }

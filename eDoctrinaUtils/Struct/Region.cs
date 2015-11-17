@@ -9,7 +9,7 @@ namespace eDoctrinaUtils
         public int outputPosition { get; set; }
         public int indexOutputPosition { get; set; }
         public string value { get; set; }
-        //public int indexOfFirstBubble { get; set; }
+        //public int indexOfFirstBubble { get; set; }//можно добавить в каждый регион
         public int subLinesAmount { get; set; }
         public int subLineHeight { get; set; }
         public int rotate { get; set; }
